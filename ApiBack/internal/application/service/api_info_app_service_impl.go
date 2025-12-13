@@ -3,6 +3,7 @@ package service
 import (
 	"ApiBack/internal/application/command"
 	"ApiBack/internal/application/mapper"
+	"ApiBack/internal/application/query"
 	"ApiBack/internal/domian/entity"
 	domainService "ApiBack/internal/domian/service"
 	"fmt"
@@ -30,4 +31,15 @@ func (s *ApiInfoAppServiceImpl) CreateApiInfo(cmd *command.CreateApiInfoCmd) err
 		return fmt.Errorf("接口创建失败: %v", err)
 	}
 	return nil
+}
+
+func (s *ApiInfoAppServiceImpl) QueryApiInfos(q *query.ApiInfoQuery) ([]*query.ApiInfoQueryResult, int64, error) {
+	filter := mapper.ToApiInfoFilter(q)
+	apiInfos, total, err := s.apiInfoService.QueryApiInfos(filter)
+	if err != nil {
+		log.Println("接口查询失败", err)
+		return nil, 0, fmt.Errorf("接口查询失败: %v", err)
+	}
+	results := mapper.ToApiInfoQueryResultList(apiInfos)
+	return results, total, nil
 }

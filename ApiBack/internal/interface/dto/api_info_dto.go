@@ -29,3 +29,19 @@ func (d *CreateApiInfoDto) ToCreateApiInfoCmd() *command.CreateApiInfoCmd {
 		Creator:     d.Creator,
 	}
 }
+
+type ApiProjectQueryReq struct {
+	Id            int64  `form:"id" json:"id"`
+	ProjectNameID string `form:"project_name_id" json:"project_name_id"`
+	Page          int    `form:"page" json:"page"`
+	PageSize      int    `form:"page_size" json:"page_size"`
+}
+
+type ApiInfoQueryReq struct {
+	Id        int64  `form:"id" json:"id"`
+	ProjectID int64  `form:"project_id" json:"project_id"`
+	Path      string `form:"path" json:"path"`
+	Method    string `form:"method" json:"method"`
+	Page      int    `form:"page" json:"page"`
+	PageSize  int    `form:"page_size" json:"page_size"`
+}

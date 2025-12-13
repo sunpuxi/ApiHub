@@ -2,7 +2,9 @@ package mapper
 
 import (
 	"ApiBack/internal/application/command"
+	"ApiBack/internal/application/query"
 	"ApiBack/internal/domian/entity"
+	"ApiBack/internal/domian/repository"
 )
 
 func ToApiInfoEntity(cmd *command.CreateApiInfoCmd) *entity.ApiInfo {
@@ -18,4 +20,43 @@ func ToApiInfoEntity(cmd *command.CreateApiInfoCmd) *entity.ApiInfo {
 		Editor:      cmd.Editor,
 		Creator:     cmd.Creator,
 	}
+}
+
+func ToApiInfoFilter(q *query.ApiInfoQuery) *repository.ApiInfoFilter {
+	return &repository.ApiInfoFilter{
+		Id:        q.Id,
+		ProjectID: q.ProjectID,
+		Path:      q.Path,
+		Method:    q.Method,
+		Page:      q.Page,
+		PageSize:  q.PageSize,
+	}
+}
+
+func ToApiInfoQueryResult(apiInfo *entity.ApiInfo) *query.ApiInfoQueryResult {
+	return &query.ApiInfoQueryResult{
+		Id:          apiInfo.Id,
+		ProjectID:   apiInfo.ProjectID,
+		Path:        apiInfo.Path,
+		Method:      apiInfo.Method,
+		ApiNameID:   apiInfo.ApiNameID,
+		Title:       apiInfo.Title,
+		ReqSchema:   apiInfo.ReqSchema,
+		RespSchema:  apiInfo.RespSchema,
+		Version:     apiInfo.Version,
+		Description: apiInfo.Description,
+		CTime:       apiInfo.CTime,
+		MTime:       apiInfo.MTime,
+		IsDel:       apiInfo.IsDel,
+		Editor:      apiInfo.Editor,
+		Creator:     apiInfo.Creator,
+	}
+}
+
+func ToApiInfoQueryResultList(apiInfos []*entity.ApiInfo) []*query.ApiInfoQueryResult {
+	results := make([]*query.ApiInfoQueryResult, 0, len(apiInfos))
+	for _, apiInfo := range apiInfos {
+		results = append(results, ToApiInfoQueryResult(apiInfo))
+	}
+	return results
 }

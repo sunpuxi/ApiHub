@@ -1,8 +1,21 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  height: 100%;
+}
+
+.ant-tabs {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.ant-tabs-content-holder {
+  flex: 1;
+  overflow: auto;
+}
+
+.ant-tabs-tabpane {
+  height: 100%;
 }
 
 .logo {

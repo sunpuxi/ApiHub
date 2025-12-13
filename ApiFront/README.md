@@ -1,73 +1,64 @@
-# React + TypeScript + Vite
+# ApiHub 前端项目
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+基于 React + TypeScript + Vite + Ant Design 构建的 API 接口文档管理平台前端项目。
 
-Currently, two official plugins are available:
+## 功能特性
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- ✅ 创建项目
+- ✅ 创建接口
 
-## React Compiler
+## 技术栈
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **React 19** - UI 框架
+- **TypeScript** - 类型系统
+- **Vite** - 构建工具
+- **Ant Design** - UI 组件库
+- **Axios** - HTTP 客户端
 
-## Expanding the ESLint configuration
+## 开发
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 安装依赖
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 启动开发服务器
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+前端服务将在 `http://localhost:3000` 启动。
+
+### 构建生产版本
+
+```bash
+npm run build
+```
+
+## API 配置
+
+后端 API 地址配置在 `src/services/api.ts` 中，默认为 `http://localhost:8080/api/v1`。
+
+如需修改，可编辑 `vite.config.ts` 中的代理配置。
+
+## 项目结构
+
+```
+src/
+  ├── components/        # 组件
+  │   ├── CreateProject.tsx    # 创建项目组件
+  │   └── CreateApi.tsx        # 创建接口组件
+  ├── services/          # API 服务
+  │   └── api.ts        # API 客户端
+  ├── types/            # 类型定义
+  │   └── api.ts        # API 类型
+  ├── App.tsx           # 主应用组件
+  └── main.tsx          # 入口文件
+```
+
+## 注意事项
+
+1. 确保后端服务已启动（默认端口 8080）
+2. 创建接口时需要先有项目，当前使用模拟数据，后续需要对接后端获取项目列表

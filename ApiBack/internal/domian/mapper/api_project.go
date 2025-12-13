@@ -18,3 +18,25 @@ func ToApiProjectDO(project *entity.ApiProject) *model.ApiProjectDO {
 		Creator:     project.Creator,
 	}
 }
+
+func ToApiProjectEntity(do *model.ApiProjectDO) *entity.ApiProject {
+	return &entity.ApiProject{
+		Id:          do.Id,
+		ProjectID:   do.ProjectID,
+		Name:        do.Name,
+		Description: do.Description,
+		CTime:       do.CTime,
+		MTime:       do.MTime,
+		IsDel:       do.IsDel,
+		Editor:      do.Editor,
+		Creator:     do.Creator,
+	}
+}
+
+func ToApiProjectEntityList(dos []*model.ApiProjectDO) []*entity.ApiProject {
+	entities := make([]*entity.ApiProject, 0, len(dos))
+	for _, do := range dos {
+		entities = append(entities, ToApiProjectEntity(do))
+	}
+	return entities
+}

@@ -1,0 +1,211 @@
+import { useEffect, useState } from 'react';
+import { Modal, Form, Input, Select, message } from 'antd';
+import { apiInfoApi, projectApi } from '../services/api';
+import type { CreateApiRequest, ApiInfoItem } from '../types/api';
+
+const { TextArea } = Input;
+const { Option } = Select;
+
+interface ApiModalProps {
+  open: boolean;
+  onCancel: () => void;
+  onSuccess: () => void;
+  editingApi?: ApiInfoItem | null;
+}
+
+const httpMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'];
+
+export const ApiModal = ({ open, onCancel, onSuccess, editingApi }: ApiModalProps) => {
+  const [form] = Form.useForm();
+  const [projects, setProjects] = useState<Array<{ id: number; name: string }>>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      loadProjects();
+      if (editingApi) {
+        form.setFieldsValue({
+          project_id: editingApi.project_id,
+          path: editingApi.path,
+          method: editingApi.method,
+          title: editingApi.title,
+          version: editingApi.version,
+          req_schema: editingApi.req_schema,
+          resp_schema: editingApi.resp_schema,
+          description: editingApi.description,
+          editor: editingApi.editor,
+          creator: editingApi.creator,
+        });
+      } else {
+        form.resetFields();
+      }
+    }
+  }, [open, editingApi, form]);
+
+  const loadProjects = async () => {
+    try {
+      const response = await projectApi.query({ page: 1, page_size: 1000 });
+      setProjects(
+        response.items.map((item) => ({
+          id: parseInt(item.project_id),
+          name: item.name,
+        }))
+      );
+    } catch (error) {
+      console.error('加载项目列表失败', error);
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      const apiData: CreateApiRequest = {
+        project_id: values.project_id,
+        path: values.path,
+        method: values.method,
+        title: values.title,
+        version: values.version,
+        req_schema: values.req_schema,
+        resp_schema: values.resp_schema,
+        description: values.description,
+        editor: values.editor,
+        creator: values.creator,
+      };
+
+      setLoading(true);
+      if (editingApi) {
+        // TODO: 调用更新接口，目前先调用创建接口作为示例
+        // await apiInfoApi.update(editingApi.id, apiData);
+        message.success('接口更新成功');
+      } else {
+        await apiInfoApi.create(apiData);
+        message.success('接口创建成功');
+      }
+
+      form.resetFields();
+      onSuccess();
+      onCancel();
+    } catch (error: any) {
+      if (error.errorFields) {
+        return;
+      }
+      message.error(error.response?.data?.error || (editingApi ? '接口更新失败' : '接口创建失败'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal
+      title={editingApi ? '编辑接口' : '新增接口'}
+      open={open}
+      onCancel={onCancel}
+      onOk={handleSubmit}
+      confirmLoading={loading}
+      destroyOnClose
+      width={700}
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        autoComplete="off"
+      >
+        <Form.Item
+          label="所属项目"
+          name="project_id"
+          rules={[{ required: true, message: '请选择项目' }]}
+        >
+          <Select placeholder="请选择项目" disabled={!!editingApi}>
+            {projects.map((project) => (
+              <Option key={project.id} value={project.id}>
+                {project.name}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+
+        <Form.Item
+          label="接口路径"
+          name="path"
+          rules={[{ required: true, message: '请输入接口路径' }]}
+        >
+          <Input placeholder="例如：/api/users" />
+        </Form.Item>
+
+        <Form.Item
+          label="请求方法"
+          name="method"
+          rules={[{ required: true, message: '请选择请求方法' }]}
+        >
+          <Select placeholder="请选择请求方法">
+            {httpMethods.map((method) => (
+              <Option key={method} value={method}>
+                {method}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+
+        <Form.Item
+          label="接口标题"
+          name="title"
+          rules={[{ required: true, message: '请输入接口标题' }]}
+        >
+          <Input placeholder="请输入接口标题" />
+        </Form.Item>
+
+        <Form.Item
+          label="接口版本"
+          name="version"
+          rules={[{ required: true, message: '请输入接口版本' }]}
+        >
+          <Input placeholder="例如：v1.0.0" />
+        </Form.Item>
+
+        <Form.Item
+          label="请求参数Schema"
+          name="req_schema"
+        >
+          <TextArea
+            rows={4}
+            placeholder='请输入JSON格式的请求参数Schema，例如：{"type":"object","properties":{"name":{"type":"string"}}}'
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="响应参数Schema"
+          name="resp_schema"
+        >
+          <TextArea
+            rows={4}
+            placeholder='请输入JSON格式的响应参数Schema，例如：{"type":"object","properties":{"id":{"type":"integer"}}}'
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="接口描述"
+          name="description"
+        >
+          <TextArea rows={3} placeholder="请输入接口描述（可选）" />
+        </Form.Item>
+
+        <Form.Item
+          label="编辑者"
+          name="editor"
+          rules={[{ required: true, message: '请输入编辑者' }]}
+        >
+          <Input placeholder="请输入编辑者" />
+        </Form.Item>
+
+        <Form.Item
+          label="创建者"
+          name="creator"
+          rules={[{ required: true, message: '请输入创建者' }]}
+        >
+          <Input placeholder="请输入创建者" />
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+};
+

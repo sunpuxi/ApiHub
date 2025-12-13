@@ -11,11 +11,13 @@ func RegisterRoutes(router *gin.Engine, container *Container) {
 		{
 			projects := v1.Group("/projects")
 			{
-				projects.POST("createProject", container.ApiProjectController.CreateApiProject)
+				projects.POST("/createProject", container.ApiProjectController.CreateApiProject)
+				projects.GET("/query", container.ApiProjectController.QueryApiProjects)
 			}
 			apis := v1.Group("/apis")
 			{
-				apis.POST("createApi", container.ApiInfoController.CreateApiInfo)
+				apis.POST("/createApi", container.ApiInfoController.CreateApiInfo)
+				apis.GET("/query", container.ApiInfoController.QueryApiInfos)
 			}
 		}
 	}

@@ -21,3 +21,12 @@ func (s *ApiInfoService) CreateApiInfo(apiInfo *entity.ApiInfo) error {
 	apiInfoDO := mapper.ToApiInfoDO(apiInfo)
 	return s.apiInfoRepository.CreateApiInfo(apiInfoDO)
 }
+
+func (s *ApiInfoService) QueryApiInfos(filter *repository.ApiInfoFilter) ([]*entity.ApiInfo, int64, error) {
+	apiInfoDOs, total, err := s.apiInfoRepository.QueryApiInfos(filter)
+	if err != nil {
+		return nil, 0, err
+	}
+	apiInfos := mapper.ToApiInfoEntityList(apiInfoDOs)
+	return apiInfos, total, nil
+}

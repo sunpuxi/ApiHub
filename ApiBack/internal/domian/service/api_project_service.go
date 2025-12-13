@@ -21,3 +21,12 @@ func (s *ApiProjectService) CreateApiProject(project *entity.ApiProject) error {
 	projectDO.ProjectID = "1112323" + strconv.FormatInt(time.Now().Unix(), 10)
 	return s.apiProjectRepository.CreateApiProject(projectDO)
 }
+
+func (s *ApiProjectService) QueryApiProjects(filter *repository.ApiProjectFilter) ([]*entity.ApiProject, int64, error) {
+	projectDOs, total, err := s.apiProjectRepository.QueryApiProjects(filter)
+	if err != nil {
+		return nil, 0, err
+	}
+	projects := mapper.ToApiProjectEntityList(projectDOs)
+	return projects, total, nil
+}

@@ -3,6 +3,7 @@ package service
 import (
 	"ApiBack/internal/application/command"
 	"ApiBack/internal/application/mapper"
+	"ApiBack/internal/application/query"
 	"ApiBack/internal/domian/entity"
 	domainService "ApiBack/internal/domian/service"
 	"fmt"
@@ -30,4 +31,15 @@ func (s *ApiProjectAppServiceImpl) CreateApiProject(cmd *command.CreateApiProjec
 		return fmt.Errorf("项目创建失败: %v", err)
 	}
 	return nil
+}
+
+func (s *ApiProjectAppServiceImpl) QueryApiProjects(q *query.ApiProjectQuery) ([]*query.ApiProjectQueryResult, int64, error) {
+	filter := mapper.ToApiProjectFilter(q)
+	projects, total, err := s.apiProjectService.QueryApiProjects(filter)
+	if err != nil {
+		log.Println("项目查询失败", err)
+		return nil, 0, fmt.Errorf("项目查询失败: %v", err)
+	}
+	results := mapper.ToApiProjectQueryResultList(projects)
+	return results, total, nil
 }
