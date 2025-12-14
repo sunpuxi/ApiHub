@@ -27,6 +27,7 @@ func ToApiProjectResponse(results []*query.ApiProjectQueryResult, total int64) *
 	items := make([]resopnse.ApiProjectItem, 0, len(results))
 	for _, result := range results {
 		items = append(items, resopnse.ApiProjectItem{
+			Id:          result.Id,
 			ProjectID:   result.ProjectID,
 			Name:        result.Name,
 			Description: result.Description,

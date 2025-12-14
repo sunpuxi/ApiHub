@@ -68,6 +68,9 @@ export const ProjectModal = ({ open, onCancel, onSuccess, editingProject }: Proj
       onOk={handleSubmit}
       destroyOnClose
       width={600}
+      styles={{
+        body: { padding: '24px' }
+      }}
     >
       <Form
         form={form}

@@ -3,19 +3,123 @@
   height: 100%;
 }
 
-.ant-tabs {
+.ant-layout-sider {
   height: 100%;
-  display: flex;
-  flex-direction: column;
 }
 
-.ant-tabs-content-holder {
-  flex: 1;
-  overflow: auto;
+/* 表格样式优化 */
+.custom-table .ant-table-tbody > tr:hover > td {
+  background-color: #f5f7fa !important;
 }
 
-.ant-tabs-tabpane {
-  height: 100%;
+.custom-table .ant-table-tbody > tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+.custom-table .ant-table-tbody > tr:nth-child(even):hover > td {
+  background-color: #f0f2f5 !important;
+}
+
+/* 卡片样式优化 */
+.ant-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.ant-card-head {
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: none;
+}
+
+.ant-card-head-title {
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* 查询区域样式 */
+.query-form-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* HTTP方法标签样式 */
+.method-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 12px;
+  min-width: 50px;
+  text-align: center;
+}
+
+.method-get {
+  background-color: #52c41a;
+  color: #fff;
+}
+
+.method-post {
+  background-color: #1890ff;
+  color: #fff;
+}
+
+.method-put {
+  background-color: #faad14;
+  color: #fff;
+}
+
+.method-delete {
+  background-color: #ff4d4f;
+  color: #fff;
+}
+
+.method-patch {
+  background-color: #722ed1;
+  color: #fff;
+}
+
+.method-head {
+  background-color: #13c2c2;
+  color: #fff;
+}
+
+.method-options {
+  background-color: #eb2f96;
+  color: #fff;
+}
+
+/* 参数编辑器样式优化 */
+.schema-editor-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  transition: all 0.3s;
+}
+
+.schema-editor-card:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+}
+
+.schema-editor-card-nested {
+  background: #fafafa;
+  border-left: 3px solid #1890ff;
+}
+
+/* 按钮样式优化 */
+.action-button {
+  transition: all 0.3s;
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .logo {

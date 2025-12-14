@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Form, Input, Select, message } from 'antd';
 import { apiInfoApi, projectApi } from '../services/api';
 import type { CreateApiRequest, ApiInfoItem } from '../types/api';
+import { SchemaEditor } from './SchemaEditor';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -11,11 +12,12 @@ interface ApiModalProps {
   onCancel: () => void;
   onSuccess: () => void;
   editingApi?: ApiInfoItem | null;
+  defaultProjectId?: number;
 }
 
 const httpMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'];
 
-export const ApiModal = ({ open, onCancel, onSuccess, editingApi }: ApiModalProps) => {
+export const ApiModal = ({ open, onCancel, onSuccess, editingApi, defaultProjectId }: ApiModalProps) => {
   const [form] = Form.useForm();
   const [projects, setProjects] = useState<Array<{ id: number; name: string }>>([]);
   const [loading, setLoading] = useState(false);
@@ -38,16 +40,19 @@ export const ApiModal = ({ open, onCancel, onSuccess, editingApi }: ApiModalProp
         });
       } else {
         form.resetFields();
+        if (defaultProjectId) {
+          form.setFieldsValue({ project_id: defaultProjectId });
+        }
       }
     }
-  }, [open, editingApi, form]);
+  }, [open, editingApi, defaultProjectId, form]);
 
   const loadProjects = async () => {
     try {
       const response = await projectApi.query({ page: 1, page_size: 1000 });
       setProjects(
         response.items.map((item) => ({
-          id: parseInt(item.project_id),
+          id: item.id,
           name: item.name,
         }))
       );
@@ -103,7 +108,7 @@ export const ApiModal = ({ open, onCancel, onSuccess, editingApi }: ApiModalProp
       onOk={handleSubmit}
       confirmLoading={loading}
       destroyOnClose
-      width={700}
+      width={1050}
     >
       <Form
         form={form}
@@ -163,13 +168,11 @@ export const ApiModal = ({ open, onCancel, onSuccess, editingApi }: ApiModalProp
         </Form.Item>
 
         <Form.Item
-          label="请求参数Schema"
+          label="请求参数"
           name="req_schema"
+          getValueFromEvent={(value) => value}
         >
-          <TextArea
-            rows={4}
-            placeholder='请输入JSON格式的请求参数Schema，例如：{"type":"object","properties":{"name":{"type":"string"}}}'
-          />
+          <SchemaEditor form={form} fieldName="req_schema" />
         </Form.Item>
 
         <Form.Item

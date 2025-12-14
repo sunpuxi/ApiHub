@@ -33,6 +33,7 @@ export interface QueryProjectRequest {
 }
 
 export interface ProjectItem {
+  id: number;
   project_id: string;
   name: string;
   description: string;

@@ -27,6 +27,7 @@ func ToApiProjectFilter(q *query.ApiProjectQuery) *repository.ApiProjectFilter {
 
 func ToApiProjectQueryResult(project *entity.ApiProject) *query.ApiProjectQueryResult {
 	return &query.ApiProjectQueryResult{
+		Id:          project.Id,
 		ProjectID:   project.ProjectID,
 		Name:        project.Name,
 		Description: project.Description,

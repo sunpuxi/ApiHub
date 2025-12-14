@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Form, Input, Button, Space, message, Pagination, Select } from 'antd';
+import { Card, Table, Form, Input, Button, Space, message, Pagination, Select, Empty } from 'antd';
 import { SearchOutlined, ReloadOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { apiInfoApi } from '../services/api';
 import type { QueryApiRequest, ApiInfoItem } from '../types/api';
@@ -122,6 +122,11 @@ export const QueryApi = () => {
       dataIndex: 'method',
       key: 'method',
       width: 100,
+      render: (method: string) => (
+        <span className={getMethodTagClass(method)}>
+          {method}
+        </span>
+      ),
     },
     {
       title: '接口标题',
@@ -164,11 +169,13 @@ export const QueryApi = () => {
       title: '操作',
       key: 'action',
       width: 100,
+      fixed: 'right' as const,
       render: (_: any, record: ApiInfoItem) => (
         <Button
           type="link"
           icon={<EditOutlined />}
           onClick={() => handleEdit(record)}
+          className="action-button"
         >
           编辑
         </Button>
@@ -176,9 +183,19 @@ export const QueryApi = () => {
     },
   ];
 
+  const getMethodTagClass = (method: string) => {
+    const methodLower = method.toLowerCase();
+    return `method-tag method-${methodLower}`;
+  };
+
   return (
-    <Card title="查询接口" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Form form={form} layout="inline" style={{ marginBottom: 16 }}>
+    <Card 
+      title="查询接口" 
+      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+      bodyStyle={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px' }}
+    >
+      <div className="query-form-card">
+        <Form form={form} layout="inline">
         <Form.Item label="接口ID" name="id">
           <Input placeholder="请输入接口ID" type="number" style={{ width: 150 }} />
         </Form.Item>
@@ -199,26 +216,53 @@ export const QueryApi = () => {
         </Form.Item>
         <Form.Item>
           <Space>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />} 
+              onClick={handleAdd}
+              style={{ borderRadius: '6px' }}
+            >
               新增接口
             </Button>
-            <Button type="primary" icon={<SearchOutlined />} onClick={onSearch}>
+            <Button 
+              type="primary" 
+              icon={<SearchOutlined />} 
+              onClick={onSearch}
+              style={{ borderRadius: '6px' }}
+            >
               查询
             </Button>
-            <Button icon={<ReloadOutlined />} onClick={onReset}>
+            <Button 
+              icon={<ReloadOutlined />} 
+              onClick={onReset}
+              style={{ borderRadius: '6px' }}
+            >
               重置
             </Button>
           </Space>
         </Form.Item>
-      </Form>
+        </Form>
+      </div>
 
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+      <div style={{ flex: 1, overflow: 'auto', minHeight: 0, background: '#fff', borderRadius: '8px', padding: '16px' }}>
         <Table
+          className="custom-table"
           columns={columns}
           dataSource={apis}
           rowKey="id"
           loading={loading}
           pagination={false}
+          size="middle"
+          scroll={{ x: 'max-content' }}
+          locale={{
+            emptyText: (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="暂无数据"
+                style={{ padding: '40px 0' }}
+              />
+            )
+          }}
         />
       </div>
 

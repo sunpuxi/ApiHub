@@ -1,55 +1,145 @@
 import { useState } from 'react';
-import { Layout, Tabs } from 'antd';
-import { ProjectOutlined, ApiOutlined } from '@ant-design/icons';
-import { QueryProject } from './components/QueryProject';
-import { QueryApi } from './components/QueryApi';
+import { Layout } from 'antd';
+import { ProjectNavigation } from './components/ProjectNavigation';
+import { ProjectDetail } from './components/ProjectDetail';
+import { ApiDetail } from './components/ApiDetail';
+import { ProjectModal } from './components/ProjectModal';
+import { ApiModal } from './components/ApiModal';
+import { ApiEditForm } from './components/ApiEditForm';
+import type { ProjectItem, ApiInfoItem } from './types/api';
 import './App.css';
 
-const { Header, Content } = Layout;
+const { Header, Sider, Content } = Layout;
 
 function App() {
-  const [activeTab, setActiveTab] = useState('project');
+  const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
+  const [selectedApi, setSelectedApi] = useState<ApiInfoItem | null>(null);
+  const [projectModalOpen, setProjectModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
+  const [apiModalOpen, setApiModalOpen] = useState(false);
+  const [editingApi, setEditingApi] = useState<ApiInfoItem | null>(null);
+  const [showApiEdit, setShowApiEdit] = useState(false);
+  const [editingApiForDetail, setEditingApiForDetail] = useState<ApiInfoItem | null>(null);
 
-  const tabItems = [
-    {
-      key: 'project',
-      label: (
-        <span>
-          <ProjectOutlined />
-          项目
-        </span>
-      ),
-      children: <QueryProject />,
-    },
-    {
-      key: 'api',
-      label: (
-        <span>
-          <ApiOutlined />
-          接口
-        </span>
-      ),
-      children: <QueryApi />,
-    },
-  ];
+  const handleSelectProject = (project: ProjectItem | null) => {
+    setSelectedProject(project);
+    setSelectedApi(null);
+  };
+
+  const handleSelectApi = (api: ApiInfoItem | null) => {
+    setSelectedApi(api);
+  };
+
+  const handleProjectEdit = (project: ProjectItem) => {
+    setEditingProject(project);
+    setProjectModalOpen(true);
+  };
+
+  const handleApiEdit = (api: ApiInfoItem) => {
+    setEditingApiForDetail(api);
+    setShowApiEdit(true);
+    setSelectedApi(null);
+  };
+
+  const handleAddApi = (project: ProjectItem) => {
+    setSelectedProject(project);
+    setSelectedApi(null);
+    setEditingApiForDetail(null);
+    setShowApiEdit(true);
+  };
+
+  const handleProjectModalSuccess = () => {
+    setProjectModalOpen(false);
+    setEditingProject(null);
+    window.location.reload();
+  };
+
+  const handleApiModalSuccess = () => {
+    setApiModalOpen(false);
+    setEditingApi(null);
+    window.location.reload();
+  };
 
   return (
     <Layout style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Header style={{ background: '#001529', padding: '0 24px', flexShrink: 0 }}>
-        <div style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold', lineHeight: '64px' }}>
+      <Header style={{ 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+        padding: '0 24px', 
+        flexShrink: 0,
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+      }}>
+        <div style={{ 
+          color: '#fff', 
+          fontSize: '20px', 
+          fontWeight: 'bold', 
+          lineHeight: '64px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <span style={{ fontSize: '24px' }}>🚀</span>
           ApiHub - API 接口文档管理平台
         </div>
       </Header>
-      <Content style={{ flex: 1, padding: '24px', background: '#f0f2f5', overflow: 'hidden' }}>
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={tabItems}
-          size="large"
-          style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-          tabBarStyle={{ marginBottom: 0 }}
-        />
-      </Content>
+      <Layout style={{ flex: 1, overflow: 'hidden' }}>
+        <Sider 
+          width={320} 
+          style={{ 
+            background: '#fff',
+            overflow: 'hidden',
+            flexShrink: 0
+          }}
+        >
+          <ProjectNavigation
+            onSelectProject={handleSelectProject}
+            onSelectApi={handleSelectApi}
+            onAddApi={handleAddApi}
+            selectedProjectId={selectedProject?.project_id}
+            selectedApiId={selectedApi?.id}
+          />
+        </Sider>
+        <Content style={{ overflow: 'hidden', background: '#f0f2f5' }}>
+          {showApiEdit ? (
+            <ApiEditForm
+              editingApi={editingApiForDetail}
+              defaultProjectId={selectedProject?.id}
+              onSave={() => {
+                setShowApiEdit(false);
+                setEditingApiForDetail(null);
+                window.location.reload();
+              }}
+              onCancel={() => {
+                setShowApiEdit(false);
+                setEditingApiForDetail(null);
+              }}
+            />
+          ) : selectedApi ? (
+            <ApiDetail api={selectedApi} onEdit={handleApiEdit} />
+          ) : (
+            <ProjectDetail project={selectedProject} onEdit={handleProjectEdit} />
+          )}
+        </Content>
+      </Layout>
+
+      <ProjectModal
+        open={projectModalOpen}
+        onCancel={() => {
+          setProjectModalOpen(false);
+          setEditingProject(null);
+        }}
+        onSuccess={handleProjectModalSuccess}
+        editingProject={editingProject}
+      />
+
+      <ApiModal
+        open={apiModalOpen}
+        onCancel={() => {
+          setApiModalOpen(false);
+          setEditingApi(null);
+        }}
+        onSuccess={handleApiModalSuccess}
+        editingApi={editingApi}
+      />
     </Layout>
   );
 }
