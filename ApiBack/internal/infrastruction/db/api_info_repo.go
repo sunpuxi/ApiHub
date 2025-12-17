@@ -15,7 +15,7 @@ type ApiInfoRepo struct {
 	db *gorm.DB
 }
 
-func NewApiInfoRepo(db *gorm.DB) *ApiInfoRepo {
+func NewApiInfoRepo(db *gorm.DB) repository.ApiInfoRepository {
 	return &ApiInfoRepo{db: db}
 }
 

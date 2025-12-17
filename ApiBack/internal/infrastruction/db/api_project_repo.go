@@ -15,7 +15,7 @@ type ApiProjectRepo struct {
 	db *gorm.DB
 }
 
-func NewApiProjectRepo(db *gorm.DB) *ApiProjectRepo {
+func NewApiProjectRepo(db *gorm.DB) repository.ApiProjectRepository {
 	return &ApiProjectRepo{db: db}
 }
 
