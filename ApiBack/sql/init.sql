@@ -1,12 +1,13 @@
 create table project (
     id BIGINT AUTO_INCREMENT NOT NULL PRIMARY KEY,
     name VARCHAR(256) NOT NULL COMMENT '项目名称',
+    project_name_id VARCHAR(256) NOT NULL COMMENT '项目名称ID',
     description TEXT COMMENT '项目描述',
     ctime DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     mtime DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     is_del TINYINT(1) DEFAULT 0 COMMENT '是否删除',
     editor VARCHAR(256) COMMENT '编辑者',
-    creator VARCHAR(256) COMMENT '创建者',
+    creator VARCHAR(256) COMMENT '创建者'
 );
 
 -- 接口信息表
@@ -25,5 +26,5 @@ create table api_info (
     mtime DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     is_del TINYINT(1) DEFAULT 0 COMMENT '是否删除',
     editor VARCHAR(256) COMMENT '编辑者',
-    creator VARCHAR(256) COMMENT '创建者',
+    creator VARCHAR(256) COMMENT '创建者'
 );

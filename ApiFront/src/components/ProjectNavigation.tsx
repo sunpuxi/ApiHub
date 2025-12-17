@@ -9,6 +9,7 @@ interface ProjectNavigationProps {
   onSelectProject?: (project: ProjectItem | null) => void;
   onSelectApi?: (api: ApiInfoItem | null) => void;
   onAddApi?: (project: ProjectItem) => void;
+  onCreateProject?: () => void;
   selectedProjectId?: string;
   selectedApiId?: number;
 }
@@ -23,6 +24,7 @@ export const ProjectNavigation = ({
   onSelectProject, 
   onSelectApi, 
   onAddApi,
+  onCreateProject,
   selectedProjectId,
   selectedApiId 
 }: ProjectNavigationProps) => {
@@ -52,14 +54,21 @@ export const ProjectNavigation = ({
         page_size: 1000,
       };
       const response = await apiInfoApi.query(params);
+      // 使用函数式更新确保获取最新状态
       setApiMap(prev => {
         const newMap = new Map(prev);
-        newMap.set(String(projectId), response.items);
+        newMap.set(String(projectId), response.items || []);
         return newMap;
       });
     } catch (error: any) {
       console.error('加载接口列表失败:', error);
       message.error(error.response?.data?.error || '加载接口列表失败');
+      // 即使失败也设置空数组，避免重复加载
+      setApiMap(prev => {
+        const newMap = new Map(prev);
+        newMap.set(String(projectId), []);
+        return newMap;
+      });
     }
   };
 
@@ -82,10 +91,21 @@ export const ProjectNavigation = ({
   const buildTreeData = (): ProjectNode[] => {
     return projects.map(project => {
       const apis = apiMap.get(String(project.id));
+      const projectKey = `project-${project.project_id}`;
+      const isExpanded = expandedKeys.includes(projectKey);
+      
+      // 如果接口数据已加载，构建子节点
       const apiChildren: ProjectNode[] = apis ? apis.map(api => ({
         key: `api-${api.id}`,
         title: (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              cursor: 'pointer'
+            }}
+          >
             <ApiOutlined style={{ color: '#1890ff' }} />
             <span style={{ fontWeight: 500 }}>{api.method}</span>
             <span style={{ color: '#666' }}>{api.path}</span>
@@ -95,8 +115,12 @@ export const ProjectNavigation = ({
         api,
       })) : [];
 
+      // 如果接口数据已加载（包括空数组），或者节点已展开，都应该显示 children
+      // 当节点展开但数据未加载时，显示空数组以保持展开状态
+      const shouldShowChildren = apis !== undefined || isExpanded;
+
       return {
-        key: `project-${project.project_id}`,
+        key: projectKey,
         title: (
           <div 
             style={{ 
@@ -106,9 +130,10 @@ export const ProjectNavigation = ({
               width: '100%',
               paddingRight: '8px'
             }}
-            onClick={(e) => e.stopPropagation()}
           >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, flex: 1 }}>
+            <span 
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, flex: 1, cursor: 'pointer' }}
+            >
               <ProjectOutlined style={{ color: '#667eea' }} />
               {project.name}
             </span>
@@ -136,7 +161,8 @@ export const ProjectNavigation = ({
         ),
         isProject: true,
         project,
-        children: apiChildren,
+        // 如果应该显示 children，设置 children（可能是空数组）；否则为 undefined
+        children: shouldShowChildren ? apiChildren : undefined,
       };
     });
   };
@@ -155,58 +181,52 @@ export const ProjectNavigation = ({
       const projectId = key.replace('project-', '');
       const project = node.project || projects.find(p => p.project_id === projectId);
       if (project) {
+        // 先选择项目，触发右侧显示
         onSelectProject?.(project);
         onSelectApi?.(null);
         
-        // 先展开项目节点
+        // 展开项目节点，确保接口列表可见
         if (!expandedKeys.includes(key)) {
           setExpandedKeys([...expandedKeys, key]);
         }
         
-        // 然后加载接口数据
+        // 加载接口数据（如果还没有加载）
         const apiKey = String(project.id);
         if (!apiMap.has(apiKey)) {
           await loadApisForProject(project.id);
         }
       }
     } else if (key.startsWith('api-')) {
-      const api = node.api;
+      // 优先从 node 中获取接口信息
+      let api = node.api;
+      
+      // 如果 node 中没有接口信息，从 apiMap 中查找
+      if (!api) {
+        const apiId = parseInt(key.replace('api-', ''));
+        const allApis = Array.from(apiMap.values()).flat();
+        api = allApis.find(a => a.id === apiId);
+      }
       
       if (api) {
+        // 先选择接口，触发右侧显示接口详情
         onSelectApi?.(api);
+        
+        // 然后确保项目节点展开和接口数据加载（但不调用 onSelectProject，避免清空接口选择）
         const project = projects.find(p => p.id === api.project_id);
         if (project) {
-          onSelectProject?.(project);
           const projectKey = `project-${project.project_id}`;
+          // 确保项目节点展开，以便看到接口列表
           if (!expandedKeys.includes(projectKey)) {
             setExpandedKeys([...expandedKeys, projectKey]);
           }
+          // 如果接口数据还没有加载，先加载
           const apiKey = String(project.id);
           if (!apiMap.has(apiKey)) {
             await loadApisForProject(project.id);
           }
         }
       } else {
-        const apiId = parseInt(key.replace('api-', ''));
-        const allApis = Array.from(apiMap.values()).flat();
-        const foundApi = allApis.find(a => a.id === apiId);
-        if (foundApi) {
-          onSelectApi?.(foundApi);
-          const project = projects.find(p => p.id === foundApi.project_id);
-          if (project) {
-            onSelectProject?.(project);
-            const projectKey = `project-${project.project_id}`;
-            if (!expandedKeys.includes(projectKey)) {
-              setExpandedKeys([...expandedKeys, projectKey]);
-            }
-            const apiKey = String(project.id);
-            if (!apiMap.has(apiKey)) {
-              await loadApisForProject(project.id);
-            }
-          }
-        } else {
-          console.error('接口未找到，ID:', apiId);
-        }
+        console.error('接口未找到，key:', key);
       }
     }
   };
@@ -238,6 +258,9 @@ export const ProjectNavigation = ({
   };
 
   const treeData = buildTreeData();
+  
+  // 计算 treeData 的 key，用于强制更新 Tree 组件
+  const treeDataKey = JSON.stringify(Array.from(apiMap.entries()).map(([k, v]) => [k, v.length]));
 
   return (
     <div style={{ 
@@ -262,6 +285,15 @@ export const ProjectNavigation = ({
             loading={loading}
           />
         </div>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={onCreateProject}
+          block
+          style={{ marginTop: '8px' }}
+        >
+          创建项目
+        </Button>
       </div>
       <div style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
         <Spin spinning={loading}>
@@ -273,6 +305,7 @@ export const ProjectNavigation = ({
             />
           ) : (
             <Tree
+              key={treeDataKey}
               treeData={treeData}
               selectedKeys={getSelectedKeys()}
               expandedKeys={expandedKeys}

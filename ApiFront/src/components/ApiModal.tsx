@@ -107,7 +107,7 @@ export const ApiModal = ({ open, onCancel, onSuccess, editingApi, defaultProject
       onCancel={onCancel}
       onOk={handleSubmit}
       confirmLoading={loading}
-      destroyOnClose
+      destroyOnHidden
       width={1050}
     >
       <Form

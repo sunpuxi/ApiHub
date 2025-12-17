@@ -23,11 +23,17 @@ function App() {
 
   const handleSelectProject = (project: ProjectItem | null) => {
     setSelectedProject(project);
+    // 明确选择项目时，清空接口选择
     setSelectedApi(null);
   };
 
   const handleSelectApi = (api: ApiInfoItem | null) => {
     setSelectedApi(api);
+    // 如果选择了接口，同时设置对应的项目（用于展开节点等，但不应该清空接口选择）
+    if (api) {
+      // 通过接口的 project_id 查找项目并设置，但不触发 handleSelectProject（避免清空接口选择）
+      // 这里不需要额外操作，因为项目信息可以通过接口的 project_id 获取
+    }
   };
 
   const handleProjectEdit = (project: ProjectItem) => {
@@ -94,6 +100,10 @@ function App() {
             onSelectProject={handleSelectProject}
             onSelectApi={handleSelectApi}
             onAddApi={handleAddApi}
+            onCreateProject={() => {
+              setEditingProject(null);
+              setProjectModalOpen(true);
+            }}
             selectedProjectId={selectedProject?.project_id}
             selectedApiId={selectedApi?.id}
           />
