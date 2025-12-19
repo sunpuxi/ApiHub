@@ -3,7 +3,7 @@ package api
 import (
 	"ApiBack/internal/application/interfaces"
 	"ApiBack/internal/interface/dto"
-	"ApiBack/internal/interface/mapper"
+	"ApiBack/internal/interface/dto/mapper"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,12 +25,16 @@ func (c *ApiInfoController) CreateApiInfo(ctx *gin.Context) {
 	}
 
 	cmd := reqDto.ToCreateApiInfoCmd()
-	if err := c.apiInfoAppService.CreateApiInfo(cmd); err != nil {
+	id, err := c.apiInfoAppService.CreateApiInfo(cmd)
+	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "创建成功"})
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "保存成功",
+		"id":      id,
+	})
 }
 
 func (c *ApiInfoController) QueryApiInfos(ctx *gin.Context) {

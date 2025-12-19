@@ -9,6 +9,7 @@ import (
 
 func ToApiProjectEntity(cmd *command.CreateApiProjectCmd) *entity.ApiProject {
 	return &entity.ApiProject{
+		Id:          cmd.ID,
 		Name:        cmd.Name,
 		Description: cmd.Description,
 		Editor:      cmd.Editor,

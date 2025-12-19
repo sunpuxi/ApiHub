@@ -25,7 +25,7 @@ func main() {
 	}
 
 	// 创建依赖容器
-	container := routerInit.NewContainer(gormDB)
+	container := routerInit.NewContainer(gormDB, cfg)
 
 	// 初始化路由
 	router := gin.Default()

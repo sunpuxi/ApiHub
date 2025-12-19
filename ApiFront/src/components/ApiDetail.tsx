@@ -1,28 +1,38 @@
-import { Card, Descriptions, Button, Tag, Space, Tabs } from 'antd';
-import { EditOutlined, CalendarOutlined, UserOutlined, ApiOutlined } from '@ant-design/icons';
+import { Card, Button, Tag, Space, Tabs, Typography, message, Divider } from 'antd';
+import { 
+  EditOutlined, 
+  UserOutlined, 
+  ApiOutlined, 
+  CopyOutlined, 
+  CodeOutlined,
+  LinkOutlined,
+  FileTextOutlined,
+  HistoryOutlined,
+  CheckOutlined
+} from '@ant-design/icons';
 import type { ApiInfoItem } from '../types/api';
+import { SchemaViewer } from './SchemaViewer';
+
+const { Title, Text } = Typography;
 
 interface ApiDetailProps {
   api: ApiInfoItem | null;
   onEdit?: (api: ApiInfoItem) => void;
 }
 
-const getMethodTagColor = (method: string) => {
+const getMethodStyle = (method: string) => {
   const methodLower = method.toLowerCase();
-  const colorMap: Record<string, string> = {
-    get: '#52c41a',
-    post: '#1890ff',
-    put: '#faad14',
-    delete: '#ff4d4f',
-    patch: '#722ed1',
-    head: '#13c2c2',
-    options: '#eb2f96',
+  const colors: Record<string, { bg: string; text: string; border: string }> = {
+    get: { bg: 'rgba(82, 196, 26, 0.1)', text: '#52c41a', border: '#b7eb8f' },
+    post: { bg: 'rgba(24, 144, 255, 0.1)', text: '#1890ff', border: '#91d5ff' },
+    put: { bg: 'rgba(250, 173, 20, 0.1)', text: '#faad14', border: '#ffd591' },
+    delete: { bg: 'rgba(255, 77, 79, 0.1)', text: '#ff4d4f', border: '#ffa39e' },
+    patch: { bg: 'rgba(114, 46, 209, 0.1)', text: '#722ed1', border: '#d3adf7' },
   };
-  return colorMap[methodLower] || '#666';
+  return colors[methodLower] || { bg: '#f5f5f5', text: '#595959', border: '#d9d9d9' };
 };
 
 export const ApiDetail = ({ api, onEdit }: ApiDetailProps) => {
-
   if (!api) {
     return (
       <div style={{ 
@@ -34,189 +44,355 @@ export const ApiDetail = ({ api, onEdit }: ApiDetailProps) => {
         color: '#999'
       }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔌</div>
-          <div style={{ fontSize: '16px' }}>请从左侧选择一个接口查看详情</div>
+          <div style={{ fontSize: '64px', marginBottom: '16px', opacity: 0.5 }}>🔌</div>
+          <Title level={4} style={{ color: '#bfbfbf' }}>请从左侧选择一个接口查看详情</Title>
         </div>
       </div>
     );
   }
+
+  const methodStyle = getMethodStyle(api.method);
 
   const tabItems = [
     {
       key: 'basic',
       label: '基本信息',
       children: (
-        <Descriptions bordered column={1} size="middle">
-          <Descriptions.Item label="接口ID">
-            <Tag color="blue">{api.id}</Tag>
-          </Descriptions.Item>
-
-          <Descriptions.Item label="接口标题">
-            <strong>{api.title}</strong>
-          </Descriptions.Item>
-
-          <Descriptions.Item label="请求方法">
-            <Tag color={getMethodTagColor(api.method)} style={{ fontSize: '12px', padding: '2px 8px' }}>
-              {api.method}
-            </Tag>
-          </Descriptions.Item>
-
-          <Descriptions.Item label="接口路径">
-            <code style={{ 
-              background: '#f5f5f5', 
-              padding: '4px 8px', 
-              borderRadius: '4px',
-              fontFamily: 'monospace'
+        <div style={{ padding: '8px 0', maxWidth: '900px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+            {/* 核心路径卡片 - 跨两列 */}
+            <div style={{ 
+              gridColumn: 'span 2',
+              background: '#fff', 
+              border: '1px solid #f0f0f0', 
+              borderRadius: '16px', 
+              padding: '24px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
             }}>
-              {api.path}
-            </code>
-          </Descriptions.Item>
+              <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Space>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(102, 126, 234, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <LinkOutlined style={{ color: '#667eea' }} />
+                  </div>
+                  <Text strong style={{ fontSize: '15px' }}>接口路径</Text>
+                </Space>
+                <Tag bordered={false} color="blue">当前版本: {api.version}</Tag>
+              </div>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px',
+                background: '#f8f9fc',
+                padding: '16px 20px',
+                borderRadius: '10px',
+                border: '1px solid #edf2f7'
+              }}>
+                <span style={{
+                  padding: '4px 12px',
+                  borderRadius: '6px',
+                  background: methodStyle.bg,
+                  color: methodStyle.text,
+                  fontWeight: 800,
+                  fontSize: '13px',
+                  boxShadow: `0 2px 4px ${methodStyle.bg}`
+                }}>
+                  {api.method.toUpperCase()}
+                </span>
+                <Text 
+                  copyable={{ icon: [<CopyOutlined key="copy" />, <CheckOutlined key="check" />] }} 
+                  style={{ fontFamily: '"Cascadia Code", Consolas, monospace', fontSize: '16px', color: '#2d3748', flex: 1 }}
+                >
+                  {api.path}
+                </Text>
+              </div>
+            </div>
 
-          <Descriptions.Item label="项目ID">
-            <Tag color="purple">{api.project_id}</Tag>
-          </Descriptions.Item>
+            {/* 功能描述 */}
+            <div style={{ 
+              background: '#fff', 
+              border: '1px solid #f0f0f0', 
+              borderRadius: '16px', 
+              padding: '24px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+            }}>
+              <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FileTextOutlined style={{ color: '#667eea' }} />
+                <Text strong style={{ fontSize: '15px' }}>功能描述</Text>
+              </div>
+              <div style={{ 
+                color: '#4a5568',
+                fontSize: '14px',
+                lineHeight: '1.8',
+                background: '#fcfcfd',
+                padding: '12px',
+                borderRadius: '8px',
+                minHeight: '100px'
+              }}>
+                {api.description || <Text type="secondary" italic>暂无详细功能描述...</Text>}
+              </div>
+            </div>
 
-          <Descriptions.Item label="版本">
-            <Tag>{api.version}</Tag>
-          </Descriptions.Item>
-
-          <Descriptions.Item label="接口描述">
-            {api.description || <span style={{ color: '#999' }}>暂无描述</span>}
-          </Descriptions.Item>
-
-          <Descriptions.Item label="创建者">
-            <Space>
-              <UserOutlined />
-              {api.creator}
-            </Space>
-          </Descriptions.Item>
-
-          <Descriptions.Item label="编辑者">
-            <Space>
-              <UserOutlined />
-              {api.editor}
-            </Space>
-          </Descriptions.Item>
-
-          <Descriptions.Item label="创建时间">
-            <Space>
-              <CalendarOutlined />
-              {new Date(api.ctime).toLocaleString('zh-CN')}
-            </Space>
-          </Descriptions.Item>
-
-          <Descriptions.Item label="更新时间">
-            <Space>
-              <CalendarOutlined />
-              {new Date(api.mtime).toLocaleString('zh-CN')}
-            </Space>
-          </Descriptions.Item>
-        </Descriptions>
+            {/* 维护与时间 */}
+            <div style={{ 
+              background: '#fff', 
+              border: '1px solid #f0f0f0', 
+              borderRadius: '16px', 
+              padding: '24px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+            }}>
+              <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <HistoryOutlined style={{ color: '#667eea' }} />
+                <Text strong style={{ fontSize: '15px' }}>维护信息</Text>
+              </div>
+              <div style={{ display: 'grid', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Text type="secondary">创建者</Text>
+                  <Space><UserOutlined style={{ color: '#bfbfbf' }} /><Text strong>{api.creator}</Text></Space>
+                </div>
+                <Divider style={{ margin: 0, opacity: 0.4 }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Text type="secondary">最后编辑</Text>
+                  <Space><EditOutlined style={{ color: '#bfbfbf' }} /><Text strong>{api.editor}</Text></Space>
+                </div>
+                <Divider style={{ margin: 0, opacity: 0.4 }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Text type="secondary">更新时间</Text>
+                  <Text style={{ color: '#718096', fontSize: '13px' }}>{new Date(api.mtime).toLocaleString()}</Text>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       ),
     },
     {
       key: 'request',
       label: '请求参数',
       children: (
-        <Card title="请求参数Schema" style={{ marginTop: '16px' }}>
-          <div style={{ 
-            background: '#fff', 
-            padding: '16px', 
-            border: '1px solid #e8e8e8', 
-            borderRadius: '4px',
-            whiteSpace: 'pre-wrap',
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            maxHeight: '600px',
-            overflow: 'auto'
-          }}>
-            {api.req_schema ? (
-              <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                {(() => {
-                  try {
-                    return JSON.stringify(JSON.parse(api.req_schema || '{}'), null, 2);
-                  } catch {
-                    return api.req_schema;
-                  }
-                })()}
-              </pre>
-            ) : (
-              <span style={{ color: '#999' }}>暂无请求参数</span>
-            )}
-          </div>
-        </Card>
+        <div style={{ marginTop: '8px' }}>
+          <SchemaViewer schema={api.req_schema || ''} />
+        </div>
       ),
     },
     {
       key: 'response',
       label: '响应参数',
       children: (
-        <Card title="响应参数Schema" style={{ marginTop: '16px' }}>
-          <div style={{ 
-            background: '#fff', 
-            padding: '16px', 
-            border: '1px solid #e8e8e8', 
-            borderRadius: '4px',
-            whiteSpace: 'pre-wrap',
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            maxHeight: '600px',
-            overflow: 'auto'
-          }}>
-            {api.resp_schema ? (
-              <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                {(() => {
-                  try {
-                    return JSON.stringify(JSON.parse(api.resp_schema || '{}'), null, 2);
-                  } catch {
-                    return api.resp_schema;
-                  }
-                })()}
+        <div style={{ marginTop: '8px' }}>
+          <SchemaViewer schema={api.resp_schema || ''} />
+        </div>
+      ),
+    },
+    {
+      key: 'mock',
+      label: 'Mock 数据',
+      children: (
+        <div style={{ 
+          height: '100%', 
+          paddingTop: '8px',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          <Card 
+            size="small" 
+            title={<Space><CodeOutlined />JSON Mock 示例</Space>}
+            extra={
+              <Button 
+                type="link" 
+                size="small" 
+                onClick={() => {
+                  navigator.clipboard.writeText(api.mock_data || '');
+                  message.success('Mock数据已复制');
+                }}
+              >
+                复制数据
+              </Button>
+            }
+            style={{ 
+              flex: 1, 
+              display: 'flex', 
+              flexDirection: 'column',
+              overflow: 'hidden'
+            }}
+            styles={{ body: { flex: 1, overflow: 'hidden', padding: 0 } }}
+          >
+            <div style={{ 
+              background: '#282c34', 
+              padding: '16px', 
+              height: '100%',
+              boxSizing: 'border-box',
+              overflow: 'auto'
+            }}>
+              <pre style={{ 
+                margin: 0, 
+                color: '#abb2bf', 
+                fontFamily: '"Cascadia Code", Consolas, monospace',
+                fontSize: '13px',
+                lineHeight: 1.6
+              }}>
+                {api.mock_data ? (
+                  (() => {
+                    try {
+                      return JSON.stringify(JSON.parse(api.mock_data), null, 2);
+                    } catch (e) {
+                      return api.mock_data;
+                    }
+                  })()
+                ) : (
+                  <span style={{ color: '#5c6370', fontStyle: 'italic' }}>// 暂无 Mock 数据</span>
+                )}
               </pre>
-            ) : (
-              <span style={{ color: '#999' }}>暂无响应参数</span>
-            )}
-          </div>
-        </Card>
+            </div>
+          </Card>
+        </div>
       ),
     },
   ];
 
   return (
-    <div style={{ height: '100%', overflow: 'auto', background: '#f0f2f5', padding: '24px' }}>
-      <Card
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Space>
-              <ApiOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
-              <span style={{ fontSize: '20px', fontWeight: 600 }}>{api.title}</span>
-              <Tag color={getMethodTagColor(api.method)} style={{ fontSize: '12px', padding: '2px 8px' }}>
-                {api.method}
-              </Tag>
-              <code style={{ 
-                background: '#f5f5f5', 
-                padding: '4px 8px', 
-                borderRadius: '4px',
-                fontFamily: 'monospace',
-                fontSize: '14px'
-              }}>
-                {api.path}
-              </code>
-            </Space>
-            <Button
-              type="primary"
-              icon={<EditOutlined />}
-              onClick={() => onEdit?.(api)}
-            >
-              编辑接口
-            </Button>
-          </div>
+    <div className="api-detail-animate-container" style={{ 
+      height: '100%', 
+      display: 'flex',
+      flexDirection: 'column',
+      background: '#f8f9fc', // 稍微亮一点的背景
+      padding: '0', // 移除外部 padding，由内部控制
+      boxSizing: 'border-box',
+      overflow: 'hidden'
+    }}>
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        style={{ borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)' }}
-      >
-        <Tabs items={tabItems} size="middle" />
-      </Card>
+        .api-detail-animate-container {
+          animation: fadeInUp 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .api-detail-main-card .ant-tabs {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+        }
+        .api-detail-main-card .ant-tabs-nav {
+          margin-bottom: 0 !important;
+          padding: 0 32px;
+          background: #fff;
+        }
+        .api-detail-main-card .ant-tabs-content {
+          flex: 1;
+          height: 100%;
+        }
+        .api-detail-main-card .ant-tabs-tabpane {
+          height: 100%;
+          overflow: auto;
+          padding: 24px 32px !important;
+        }
+        /* 隐藏滚动条但保留功能 */
+        .api-detail-main-card .ant-tabs-tabpane::-webkit-scrollbar {
+          width: 6px;
+        }
+        .api-detail-main-card .ant-tabs-tabpane::-webkit-scrollbar-thumb {
+          background: #e8e8e8;
+          border-radius: 3px;
+        }
+      `}</style>
+
+      {/* Hero Header 区域 */}
+      <div style={{ 
+        background: '#fff',
+        padding: '32px 32px 24px',
+        borderBottom: '1px solid #f0f0f0',
+        flexShrink: 0,
+        position: 'relative',
+        zIndex: 10
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <Space direction="vertical" size={12}>
+            <Space align="center" size={16}>
+              <div style={{ 
+                width: '48px', 
+                height: '48px', 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
+              }}>
+                <ApiOutlined style={{ fontSize: '24px', color: '#fff' }} />
+              </div>
+              <div>
+                <Title level={2} style={{ margin: 0, fontWeight: 700, letterSpacing: '-0.5px' }}>
+                  {api.title}
+                </Title>
+                <div style={{ marginTop: '4px' }}>
+                  <Space split={<Divider type="vertical" style={{ borderColor: '#e8e8e8' }} />}>
+                    <Text type="secondary" style={{ fontSize: '13px', fontFamily: 'monospace' }}>
+                      ID: {api.id}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: '13px' }}>
+                      <UserOutlined style={{ marginRight: '4px' }} />
+                      {api.editor}
+                    </Text>
+                    <Tag color={methodStyle.text === '#52c41a' ? 'success' : 'processing'} bordered={false} style={{ margin: 0 }}>
+                      {api.version}
+                    </Tag>
+                  </Space>
+                </div>
+              </div>
+            </Space>
+          </Space>
+          
+          <Button
+            type="primary"
+            size="large"
+            icon={<EditOutlined />}
+            onClick={() => onEdit?.(api)}
+            style={{ 
+              height: '44px',
+              padding: '0 24px',
+              borderRadius: '8px', 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              border: 'none',
+              boxShadow: '0 4px 12px rgba(118, 75, 162, 0.3)',
+              fontWeight: 600
+            }}
+          >
+            编辑文档
+          </Button>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        <Card
+          className="api-detail-main-card"
+          bordered={false}
+          style={{ 
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            borderRadius: 0,
+            background: 'transparent'
+          }}
+          styles={{ 
+            body: { 
+              padding: 0,
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden'
+            } 
+          }}
+        >
+          <Tabs 
+            items={tabItems} 
+            size="large" 
+            indicator={{ size: (origin) => origin - 20, align: 'center' }}
+            style={{ height: '100%' }}
+          />
+        </Card>
+      </div>
     </div>
   );
 };
+
 

@@ -1,10 +1,45 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Button, Input, Select, Space, Card } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, Input, Select, Space, Card, Modal, message } from 'antd';
+import { PlusOutlined, DeleteOutlined, CodeOutlined } from '@ant-design/icons';
 import type { FormInstance } from 'antd';
 import React from 'react';
 
 const { Option } = Select;
+const { TextArea } = Input;
+
+// JSON 转 Schema 的辅助逻辑
+const jsonToSchema = (json: any): any => {
+  if (json === null) return { type: 'string' };
+  const type = typeof json;
+
+  if (type === 'string') return { type: 'string', example: json };
+  if (type === 'number') return { type: 'number', example: json };
+  if (type === 'boolean') return { type: 'boolean', example: json };
+
+  if (Array.isArray(json)) {
+    const itemSchema = json.length > 0 ? jsonToSchema(json[0]) : { type: 'string' };
+    return {
+      type: 'array',
+      items: itemSchema.type === 'object' ? itemSchema : { type: itemSchema.type }
+    };
+  }
+
+  if (type === 'object') {
+    const properties: any = {};
+    const required: string[] = [];
+    Object.keys(json).forEach(key => {
+      properties[key] = jsonToSchema(json[key]);
+      required.push(key);
+    });
+    return {
+      type: 'object',
+      properties,
+      required
+    };
+  }
+
+  return { type: 'string' };
+};
 
 export interface Parameter {
   id: string;
@@ -26,6 +61,8 @@ const PARAM_TYPES = ['string', 'number', 'integer', 'boolean', 'object', 'array'
 
 export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorProps) => {
   const [parameters, setParameters] = useState<Parameter[]>([]);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [jsonInput, setJsonInput] = useState('');
   const updateTimerRef = useRef<number | null>(null);
   const isInternalUpdateRef = useRef(false);
   const lastValueRef = useRef<string>('');
@@ -247,6 +284,31 @@ export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorP
     });
   }, [syncToForm]);
 
+  const handleImportJson = () => {
+    try {
+      const parsed = JSON.parse(jsonInput);
+      const schema = jsonToSchema(parsed);
+      const schemaJson = JSON.stringify(schema, null, 2);
+      
+      // 更新状态
+      const newParams = parseSchemaToParameters(schema);
+      setParameters(newParams);
+      
+      // 同步到外部
+      isInternalUpdateRef.current = true;
+      onChange?.(schemaJson);
+      if (form && fieldName) {
+        form.setFieldValue(fieldName, schemaJson);
+      }
+      
+      setImportModalOpen(false);
+      setJsonInput('');
+      message.success('JSON 导入成功，已推导出结构');
+    } catch (e) {
+      message.error('无效的 JSON 格式');
+    }
+  };
+
   interface ParameterItemProps {
     param: Parameter;
     level: number;
@@ -400,13 +462,13 @@ export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorP
 
   return (
     <div>
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 16, display: 'flex', gap: '8px' }}>
         <Button
           type="dashed"
           icon={<PlusOutlined />}
           onClick={() => handleAddParameter()}
-          block
           style={{ 
+            flex: 1,
             borderRadius: '6px',
             height: '40px',
             borderColor: '#1890ff',
@@ -414,6 +476,16 @@ export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorP
           }}
         >
           添加参数
+        </Button>
+        <Button
+          icon={<CodeOutlined />}
+          onClick={() => setImportModalOpen(true)}
+          style={{ 
+            height: '40px',
+            borderRadius: '6px'
+          }}
+        >
+          JSON 导入
         </Button>
       </div>
       <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
@@ -442,6 +514,30 @@ export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorP
           ))
         )}
       </div>
+
+      <Modal
+        title="从 JSON 示例导入结构"
+        open={importModalOpen}
+        onOk={handleImportJson}
+        onCancel={() => setImportModalOpen(false)}
+        destroyOnClose
+        width={600}
+        okText="立即推导并导入"
+        cancelText="取消"
+      >
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ color: '#8c8c8c', fontSize: '13px' }}>
+            粘贴你接口的真实响应或请求 JSON，系统将自动识别类型、层级和示例值。
+          </p>
+          <TextArea
+            rows={12}
+            value={jsonInput}
+            onChange={(e) => setJsonInput(e.target.value)}
+            placeholder='例如：{"name": "Jack", "age": 18, "data": {"tags": ["AI"]}}'
+            style={{ fontFamily: 'monospace', fontSize: '12px' }}
+          />
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -18,8 +18,19 @@ func NewApiProjectService(apiProjectRepository repository.ApiProjectRepository) 
 
 func (s *ApiProjectService) CreateApiProject(project *entity.ApiProject) error {
 	projectDO := mapper.ToApiProjectDO(project)
-	projectDO.ProjectID = "1112323" + strconv.FormatInt(time.Now().Unix(), 10)
-	return s.apiProjectRepository.CreateApiProject(projectDO)
+	projectDO.ProjectID = "PROJ" + strconv.FormatInt(time.Now().Unix(), 10)
+	err := s.apiProjectRepository.CreateApiProject(projectDO)
+	if err != nil {
+		return err
+	}
+	project.Id = projectDO.Id
+	project.ProjectID = projectDO.ProjectID
+	return nil
+}
+
+func (s *ApiProjectService) UpdateApiProject(project *entity.ApiProject) error {
+	projectDO := mapper.ToApiProjectDO(project)
+	return s.apiProjectRepository.UpdateApiProject(projectDO)
 }
 
 func (s *ApiProjectService) QueryApiProjects(filter *repository.ApiProjectFilter) ([]*entity.ApiProject, int64, error) {

@@ -2,7 +2,7 @@ package mapper
 
 import (
 	"ApiBack/internal/domian/entity"
-	"ApiBack/internal/infrastruction/model"
+	"ApiBack/internal/infrastructure/model"
 )
 
 func ToApiInfoDO(apiInfo *entity.ApiInfo) *model.ApiInfoDO {
@@ -22,6 +22,7 @@ func ToApiInfoDO(apiInfo *entity.ApiInfo) *model.ApiInfoDO {
 		IsDel:       apiInfo.IsDel,
 		Editor:      apiInfo.Editor,
 		Creator:     apiInfo.Creator,
+		MockData:    apiInfo.MockData,
 	}
 }
 
@@ -42,6 +43,7 @@ func ToApiInfoEntity(do *model.ApiInfoDO) *entity.ApiInfo {
 		IsDel:       do.IsDel,
 		Editor:      do.Editor,
 		Creator:     do.Creator,
+		MockData:    do.MockData,
 	}
 }
 

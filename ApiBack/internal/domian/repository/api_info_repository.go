@@ -1,6 +1,6 @@
 package repository
 
-import "ApiBack/internal/infrastruction/model"
+import "ApiBack/internal/infrastructure/model"
 
 type ApiInfoRepository interface {
 	// 创建接口
@@ -18,10 +18,11 @@ type ApiProjectFilter struct {
 }
 
 type ApiInfoFilter struct {
-	Id        int64  `json:"id"`
-	ProjectID int64  `json:"project_id"`
-	Path      string `json:"path"`
-	Method    string `json:"method"`
-	Page      int    `json:"page"`
-	PageSize  int    `json:"page_size"`
+	Id            int64  `json:"id"`
+	ProjectID     int64  `json:"project_id"`
+	Path          string `json:"path"`
+	Method        string `json:"method"`
+	InterfaceName string `json:"interface_name"`
+	Page          int    `json:"page"`
+	PageSize      int    `json:"page_size"`
 }

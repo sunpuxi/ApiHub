@@ -17,9 +17,16 @@ func NewApiInfoService(apiInfoRepository repository.ApiInfoRepository) *ApiInfoS
 }
 
 func (s *ApiInfoService) CreateApiInfo(apiInfo *entity.ApiInfo) error {
-	apiInfo.ApiNameID = "API" + strconv.FormatInt(time.Now().Unix(), 10)
+	if apiInfo.Id <= 0 {
+		apiInfo.ApiNameID = "API" + strconv.FormatInt(time.Now().Unix(), 10)
+	}
 	apiInfoDO := mapper.ToApiInfoDO(apiInfo)
-	return s.apiInfoRepository.CreateApiInfo(apiInfoDO)
+	err := s.apiInfoRepository.CreateApiInfo(apiInfoDO)
+	if err != nil {
+		return err
+	}
+	apiInfo.Id = apiInfoDO.Id
+	return nil
 }
 
 func (s *ApiInfoService) QueryApiInfos(filter *repository.ApiInfoFilter) ([]*entity.ApiInfo, int64, error) {

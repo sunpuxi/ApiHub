@@ -10,7 +10,7 @@ const { Option } = Select;
 interface ApiModalProps {
   open: boolean;
   onCancel: () => void;
-  onSuccess: () => void;
+  onSuccess: (apiId?: number) => void;
   editingApi?: ApiInfoItem | null;
   defaultProjectId?: number;
 }
@@ -34,6 +34,7 @@ export const ApiModal = ({ open, onCancel, onSuccess, editingApi, defaultProject
           version: editingApi.version,
           req_schema: editingApi.req_schema,
           resp_schema: editingApi.resp_schema,
+          mock_data: editingApi.mock_data,
           description: editingApi.description,
           editor: editingApi.editor,
           creator: editingApi.creator,
@@ -65,6 +66,7 @@ export const ApiModal = ({ open, onCancel, onSuccess, editingApi, defaultProject
     try {
       const values = await form.validateFields();
       const apiData: CreateApiRequest = {
+        id: editingApi?.id,
         project_id: values.project_id,
         path: values.path,
         method: values.method,
@@ -72,23 +74,18 @@ export const ApiModal = ({ open, onCancel, onSuccess, editingApi, defaultProject
         version: values.version,
         req_schema: values.req_schema,
         resp_schema: values.resp_schema,
+        mock_data: values.mock_data,
         description: values.description,
         editor: values.editor,
         creator: values.creator,
       };
 
       setLoading(true);
-      if (editingApi) {
-        // TODO: 调用更新接口，目前先调用创建接口作为示例
-        // await apiInfoApi.update(editingApi.id, apiData);
-        message.success('接口更新成功');
-      } else {
-        await apiInfoApi.create(apiData);
-        message.success('接口创建成功');
-      }
+      const response = await apiInfoApi.create(apiData);
+      message.success(editingApi ? '接口更新成功' : '接口创建成功');
 
       form.resetFields();
-      onSuccess();
+      onSuccess(response.id);
       onCancel();
     } catch (error: any) {
       if (error.errorFields) {
@@ -178,10 +175,19 @@ export const ApiModal = ({ open, onCancel, onSuccess, editingApi, defaultProject
         <Form.Item
           label="响应参数Schema"
           name="resp_schema"
+          getValueFromEvent={(value) => value}
         >
-          <TextArea
-            rows={4}
-            placeholder='请输入JSON格式的响应参数Schema，例如：{"type":"object","properties":{"id":{"type":"integer"}}}'
+          <SchemaEditor form={form} fieldName="resp_schema" />
+        </Form.Item>
+
+        <Form.Item
+          label="Mock 数据"
+          name="mock_data"
+        >
+          <TextArea 
+            rows={6} 
+            placeholder='请输入 JSON 格式的 Mock 数据'
+            style={{ fontFamily: 'monospace' }}
           />
         </Form.Item>
 

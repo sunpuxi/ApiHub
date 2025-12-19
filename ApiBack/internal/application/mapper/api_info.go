@@ -9,6 +9,7 @@ import (
 
 func ToApiInfoEntity(cmd *command.CreateApiInfoCmd) *entity.ApiInfo {
 	return &entity.ApiInfo{
+		Id:          cmd.ID,
 		ProjectID:   cmd.ProjectID,
 		Path:        cmd.Path,
 		Method:      cmd.Method,
@@ -19,17 +20,19 @@ func ToApiInfoEntity(cmd *command.CreateApiInfoCmd) *entity.ApiInfo {
 		Description: cmd.Description,
 		Editor:      cmd.Editor,
 		Creator:     cmd.Creator,
+		MockData:    cmd.MockData,
 	}
 }
 
 func ToApiInfoFilter(q *query.ApiInfoQuery) *repository.ApiInfoFilter {
 	return &repository.ApiInfoFilter{
-		Id:        q.Id,
-		ProjectID: q.ProjectID,
-		Path:      q.Path,
-		Method:    q.Method,
-		Page:      q.Page,
-		PageSize:  q.PageSize,
+		Id:            q.Id,
+		ProjectID:     q.ProjectID,
+		Path:          q.Path,
+		Method:        q.Method,
+		InterfaceName: q.InterfaceName,
+		Page:          q.Page,
+		PageSize:      q.PageSize,
 	}
 }
 
@@ -50,6 +53,7 @@ func ToApiInfoQueryResult(apiInfo *entity.ApiInfo) *query.ApiInfoQueryResult {
 		IsDel:       apiInfo.IsDel,
 		Editor:      apiInfo.Editor,
 		Creator:     apiInfo.Creator,
+		MockData:    apiInfo.MockData,
 	}
 }
 

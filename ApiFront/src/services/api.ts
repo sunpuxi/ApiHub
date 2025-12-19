@@ -1,5 +1,13 @@
 import axios from 'axios';
-import type { CreateProjectRequest, CreateApiRequest, QueryProjectRequest, QueryProjectResponse, QueryApiRequest, QueryApiResponse } from '../types/api';
+import type { 
+  CreateProjectRequest, 
+  CreateApiRequest, 
+  QueryProjectRequest, 
+  QueryProjectResponse, 
+  QueryApiRequest, 
+  QueryApiResponse,
+  ApiInfoItem 
+} from '../types/api';
 
 const API_BASE_URL = 'http://localhost:8080/api/v1';
 
@@ -29,6 +37,10 @@ export const apiInfoApi = {
   query: async (params: QueryApiRequest): Promise<QueryApiResponse> => {
     const response = await apiClient.get('/apis/query', { params });
     return response.data;
+  },
+  getDetail: async (id: number): Promise<ApiInfoItem> => {
+    const response = await apiClient.get('/apis/query', { params: { id } });
+    return response.data.items[0];
   },
 };
 

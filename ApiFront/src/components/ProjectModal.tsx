@@ -34,20 +34,15 @@ export const ProjectModal = ({ open, onCancel, onSuccess, editingProject }: Proj
     try {
       const values = await form.validateFields();
       const projectData: CreateProjectRequest = {
+        id: editingProject?.id,
         name: values.name,
         description: values.description,
         editor: values.editor,
         creator: values.creator,
       };
 
-      if (editingProject) {
-        // TODO: 调用更新接口，目前先调用创建接口作为示例
-        // await projectApi.update(editingProject.project_id, projectData);
-        message.success('项目更新成功');
-      } else {
-        await projectApi.create(projectData);
-        message.success('项目创建成功');
-      }
+      await projectApi.create(projectData);
+      message.success(editingProject ? '项目更新成功' : '项目创建成功');
       
       form.resetFields();
       onSuccess();

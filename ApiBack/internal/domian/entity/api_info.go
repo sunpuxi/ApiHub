@@ -21,6 +21,7 @@ type ApiInfo struct {
 	IsDel       bool      `json:"is_del"`
 	Editor      string    `json:"editor"`
 	Creator     string    `json:"creator"`
+	MockData    string    `json:"mock_data"`
 }
 
 func (a *ApiInfo) validate() error {

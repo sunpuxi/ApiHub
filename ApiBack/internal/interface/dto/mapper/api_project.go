@@ -3,7 +3,7 @@ package mapper
 import (
 	"ApiBack/internal/application/query"
 	"ApiBack/internal/interface/dto"
-	"ApiBack/internal/interface/resopnse"
+	"ApiBack/internal/interface/dto/resopnse"
 )
 
 func ToApiProjectQuery(req *dto.ApiProjectQueryReq) *query.ApiProjectQuery {

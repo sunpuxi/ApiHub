@@ -3,12 +3,13 @@ package query
 import "time"
 
 type ApiInfoQuery struct {
-	Id        int64  `json:"id"`
-	ProjectID int64  `json:"project_id"`
-	Path      string `json:"path"`
-	Method    string `json:"method"`
-	Page      int    `json:"page"`
-	PageSize  int    `json:"page_size"`
+	Id            int64  `json:"id"`
+	ProjectID     int64  `json:"project_id"`
+	Path          string `json:"path"`
+	Method        string `json:"method"`
+	InterfaceName string `json:"interface_name"`
+	Page          int    `json:"page"`
+	PageSize      int    `json:"page_size"`
 }
 
 type ApiInfoQueryResult struct {
@@ -27,5 +28,5 @@ type ApiInfoQueryResult struct {
 	IsDel       bool      `json:"is_del"`
 	Editor      string    `json:"editor"`
 	Creator     string    `json:"creator"`
+	MockData    string    `json:"mock_data"`
 }
-

@@ -18,4 +18,5 @@ type ApiInfoDO struct {
 	IsDel       bool      `gorm:"column:is_del;type:tinyint(1);not null;default:0" json:"is_del"`
 	Editor      string    `gorm:"column:editor;type:varchar(256)" json:"editor"`
 	Creator     string    `gorm:"column:creator;type:varchar(256)" json:"creator"`
+	MockData    string    `gorm:"column:mock_data;type:text" json:"mock_data"`
 }

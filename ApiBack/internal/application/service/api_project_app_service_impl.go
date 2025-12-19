@@ -2,6 +2,7 @@ package service
 
 import (
 	"ApiBack/internal/application/command"
+	"ApiBack/internal/application/interfaces"
 	"ApiBack/internal/application/mapper"
 	"ApiBack/internal/application/query"
 	"ApiBack/internal/domian/entity"
@@ -14,7 +15,7 @@ type ApiProjectAppServiceImpl struct {
 	apiProjectService *domainService.ApiProjectService
 }
 
-func NewApiProjectAppServiceImpl(apiProjectService *domainService.ApiProjectService) *ApiProjectAppServiceImpl {
+func NewApiProjectAppServiceImpl(apiProjectService *domainService.ApiProjectService) interfaces.ApiProjectAppService {
 	return &ApiProjectAppServiceImpl{apiProjectService: apiProjectService}
 }
 
@@ -25,11 +26,22 @@ func (s *ApiProjectAppServiceImpl) CreateApiProject(cmd *command.CreateApiProjec
 		log.Println("项目验证失败", err)
 		return fmt.Errorf("项目验证失败: %v", err)
 	}
+
+	if validateProject.ApiProject.Id > 0 {
+		err = s.apiProjectService.UpdateApiProject(validateProject.ApiProject)
+		if err != nil {
+			log.Println("项目更新失败", err)
+			return fmt.Errorf("项目更新失败: %v", err)
+		}
+		return nil
+	}
+
 	err = s.apiProjectService.CreateApiProject(validateProject.ApiProject)
 	if err != nil {
 		log.Println("项目创建失败", err)
 		return fmt.Errorf("项目创建失败: %v", err)
 	}
+
 	return nil
 }
 

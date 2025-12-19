@@ -2,7 +2,7 @@ package db
 
 import (
 	"ApiBack/internal/domian/repository"
-	"ApiBack/internal/infrastruction/model"
+	"ApiBack/internal/infrastructure/model"
 
 	"gorm.io/gorm"
 )
@@ -23,11 +23,15 @@ func (r *ApiProjectRepo) CreateApiProject(project *model.ApiProjectDO) error {
 	return r.db.Table(apiProjectTableName).Create(project).Error
 }
 
+func (r *ApiProjectRepo) UpdateApiProject(project *model.ApiProjectDO) error {
+	return r.db.Table(apiProjectTableName).Where("id = ?", project.Id).Updates(project).Error
+}
+
 func (r *ApiProjectRepo) QueryApiProjects(filter *repository.ApiProjectFilter) ([]*model.ApiProjectDO, int64, error) {
 	var projects []*model.ApiProjectDO
 	var total int64
 
-	query := r.db.Table(apiProjectTableName).Where("is_del = ?", false)
+	query := r.db.Table(apiProjectTableName).Where("is_del = ?", 0)
 
 	if filter.Id > 0 {
 		query = query.Where("id = ?", filter.Id)
@@ -36,8 +40,13 @@ func (r *ApiProjectRepo) QueryApiProjects(filter *repository.ApiProjectFilter) (
 		query = query.Where("project_name_id = ?", filter.ProjectNameID)
 	}
 
-	if err := query.Count(&total).Error; err != nil {
+	// 使用 Session 避免修改原始 query 对象
+	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {
 		return nil, 0, err
+	}
+
+	if total == 0 {
+		return []*model.ApiProjectDO{}, 0, nil
 	}
 
 	page := filter.Page

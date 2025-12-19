@@ -11,7 +11,7 @@ const { Option } = Select;
 interface ApiEditFormProps {
   editingApi?: ApiInfoItem | null;
   defaultProjectId?: number;
-  onSave?: () => void;
+  onSave?: (apiId?: number) => void;
   onCancel?: () => void;
 }
 
@@ -33,6 +33,7 @@ export const ApiEditForm = ({ editingApi, defaultProjectId, onSave, onCancel }: 
         version: editingApi.version,
         req_schema: editingApi.req_schema,
         resp_schema: editingApi.resp_schema,
+        mock_data: editingApi.mock_data,
         description: editingApi.description,
         editor: editingApi.editor,
         creator: editingApi.creator,
@@ -62,7 +63,19 @@ export const ApiEditForm = ({ editingApi, defaultProjectId, onSave, onCancel }: 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      
+      // 判断响应参数是否发生变化
+      let isUpdateRespSchema = false;
+      if (!editingApi) {
+        // 新增模式：只要填写了响应参数就视为更新
+        isUpdateRespSchema = !!values.resp_schema && values.resp_schema.trim() !== '';
+      } else {
+        // 编辑模式：判断是否与原有 schema 不同
+        isUpdateRespSchema = values.resp_schema !== editingApi.resp_schema;
+      }
+
       const apiData: CreateApiRequest = {
+        id: editingApi?.id,
         project_id: values.project_id,
         path: values.path,
         method: values.method,
@@ -70,23 +83,19 @@ export const ApiEditForm = ({ editingApi, defaultProjectId, onSave, onCancel }: 
         version: values.version,
         req_schema: values.req_schema,
         resp_schema: values.resp_schema,
+        mock_data: values.mock_data,
         description: values.description,
         editor: values.editor,
         creator: values.creator,
+        is_update_resp_schema: isUpdateRespSchema,
       };
 
       setLoading(true);
-      if (editingApi) {
-        // TODO: 调用更新接口，目前先调用创建接口作为示例
-        // await apiInfoApi.update(editingApi.id, apiData);
-        message.success('接口更新成功');
-      } else {
-        await apiInfoApi.create(apiData);
-        message.success('接口创建成功');
-      }
+      const response = await apiInfoApi.create(apiData);
+      message.success(editingApi ? '接口更新成功' : '接口创建成功');
 
       form.resetFields();
-      onSave?.();
+      onSave?.(response.id);
     } catch (error: any) {
       if (error.errorFields) {
         return;
@@ -190,10 +199,19 @@ export const ApiEditForm = ({ editingApi, defaultProjectId, onSave, onCancel }: 
           <Form.Item
             label="响应参数Schema"
             name="resp_schema"
+            getValueFromEvent={(value) => value}
           >
-            <TextArea
-              rows={4}
-              placeholder='请输入JSON格式的响应参数Schema，例如：{"type":"object","properties":{"id":{"type":"integer"}}}'
+            <SchemaEditor form={form} fieldName="resp_schema" />
+          </Form.Item>
+
+          <Form.Item
+            label="Mock 数据"
+            name="mock_data"
+          >
+            <TextArea 
+              rows={6} 
+              placeholder='请输入 JSON 格式的 Mock 数据'
+              style={{ fontFamily: 'monospace' }}
             />
           </Form.Item>
 

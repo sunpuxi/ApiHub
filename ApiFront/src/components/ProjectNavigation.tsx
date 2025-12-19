@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Tree, Input, Button, message, Empty, Spin, Tooltip } from 'antd';
+import { Tree, Input, Button, message, Empty, Spin, Tooltip, Skeleton } from 'antd';
+// ... 保持原有图标导入 ...
 import { ProjectOutlined, ApiOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { projectApi, apiInfoApi } from '../services/api';
 import type { ProjectItem, ApiInfoItem, QueryApiRequest } from '../types/api';
@@ -12,6 +13,7 @@ interface ProjectNavigationProps {
   onCreateProject?: () => void;
   selectedProjectId?: string;
   selectedApiId?: number;
+  refreshTrigger?: number;
 }
 
 interface ProjectNode extends DataNode {
@@ -20,13 +22,26 @@ interface ProjectNode extends DataNode {
   isProject: boolean;
 }
 
+const getMethodStyle = (method: string) => {
+  const methodLower = method.toLowerCase();
+  const colors: Record<string, { bg: string; text: string }> = {
+    get: { bg: 'rgba(82, 196, 26, 0.1)', text: '#52c41a' },
+    post: { bg: 'rgba(24, 144, 255, 0.1)', text: '#1890ff' },
+    put: { bg: 'rgba(250, 173, 20, 0.1)', text: '#faad14' },
+    delete: { bg: 'rgba(255, 77, 79, 0.1)', text: '#ff4d4f' },
+    patch: { bg: 'rgba(114, 46, 209, 0.1)', text: '#722ed1' },
+  };
+  return colors[methodLower] || { bg: '#f5f5f5', text: '#595959' };
+};
+
 export const ProjectNavigation = ({ 
   onSelectProject, 
   onSelectApi, 
   onAddApi,
   onCreateProject,
   selectedProjectId,
-  selectedApiId 
+  selectedApiId,
+  refreshTrigger
 }: ProjectNavigationProps) => {
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<ProjectItem[]>([]);
@@ -74,7 +89,7 @@ export const ProjectNavigation = ({
 
   useEffect(() => {
     loadProjects();
-  }, []);
+  }, [refreshTrigger]);
 
   useEffect(() => {
     if (selectedProjectId) {
@@ -98,17 +113,34 @@ export const ProjectNavigation = ({
       const apiChildren: ProjectNode[] = apis ? apis.map(api => ({
         key: `api-${api.id}`,
         title: (
-          <span 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px',
-              cursor: 'pointer'
-            }}
-          >
-            <ApiOutlined style={{ color: '#1890ff' }} />
-            <span style={{ fontWeight: 500 }}>{api.method}</span>
-            <span style={{ color: '#666' }}>{api.path}</span>
+          <span style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            cursor: 'pointer'
+          }}>
+            <span style={{ 
+              fontSize: '10px', 
+              fontWeight: 'bold', 
+              minWidth: '32px',
+              color: getMethodStyle(api.method).text,
+              background: getMethodStyle(api.method).bg,
+              padding: '0 4px',
+              borderRadius: '3px',
+              textAlign: 'center',
+              lineHeight: '1.6'
+            }}>
+              {api.method.toUpperCase()}
+            </span>
+            <span style={{ 
+              fontWeight: 500, 
+              overflow: 'hidden', 
+              textOverflow: 'ellipsis', 
+              whiteSpace: 'nowrap',
+              maxWidth: '180px'
+            }} title={api.title}>
+              {api.title}
+            </span>
           </span>
         ),
         isProject: false,
@@ -263,14 +295,36 @@ export const ProjectNavigation = ({
   const treeDataKey = JSON.stringify(Array.from(apiMap.entries()).map(([k, v]) => [k, v.length]));
 
   return (
-    <div style={{ 
+    <div className="project-navigation-container" style={{ 
       height: '100%', 
       display: 'flex', 
       flexDirection: 'column',
       background: '#fff',
-      borderRight: '1px solid #e8e8e8'
+      borderRight: '1px solid #f0f0f0'
     }}>
-      <div style={{ padding: '16px', borderBottom: '1px solid #e8e8e8' }}>
+      <style>{`
+        .project-navigation-container .ant-tree-node-content-wrapper {
+          transition: all 0.2s ease !important;
+          border-radius: 6px !important;
+          padding: 4px 8px !important;
+          margin: 2px 0 !important;
+        }
+        .project-navigation-container .ant-tree-node-content-wrapper:hover {
+          background-color: #f5f7ff !important;
+          color: #1890ff !important;
+        }
+        .project-navigation-container .ant-tree-node-selected {
+          background-color: #e6f7ff !important;
+          color: #1890ff !important;
+          box-shadow: inset 2px 0 0 #1890ff;
+        }
+        .ant-tree-switcher {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+      `}</style>
+      <div style={{ padding: '16px', borderBottom: '1px solid #f0f0f0' }}>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
           <Input
             placeholder="搜索项目或接口"
@@ -296,26 +350,28 @@ export const ProjectNavigation = ({
         </Button>
       </div>
       <div style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
-        <Spin spinning={loading}>
-          {treeData.length === 0 ? (
-            <Empty 
-              description="暂无项目" 
-              style={{ padding: '40px 0' }}
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
-          ) : (
-            <Tree
-              key={treeDataKey}
-              treeData={treeData}
-              selectedKeys={getSelectedKeys()}
-              expandedKeys={expandedKeys}
-              onSelect={handleSelect}
-              onExpand={handleExpand}
-              blockNode
-              showLine={{ showLeafIcon: false }}
-            />
-          )}
-        </Spin>
+        {loading && projects.length === 0 ? (
+          <div style={{ padding: '16px' }}>
+            <Skeleton active paragraph={{ rows: 8 }} />
+          </div>
+        ) : treeData.length === 0 ? (
+          <Empty 
+            description="暂无项目" 
+            style={{ padding: '40px 0' }}
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          />
+        ) : (
+          <Tree
+            key={treeDataKey}
+            treeData={treeData}
+            selectedKeys={getSelectedKeys()}
+            expandedKeys={expandedKeys}
+            onSelect={handleSelect}
+            onExpand={handleExpand}
+            blockNode
+            showLine={{ showLeafIcon: false }}
+          />
+        )}
       </div>
     </div>
   );

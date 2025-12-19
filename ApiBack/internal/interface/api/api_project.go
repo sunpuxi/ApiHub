@@ -3,7 +3,7 @@ package api
 import (
 	"ApiBack/internal/application/interfaces"
 	"ApiBack/internal/interface/dto"
-	"ApiBack/internal/interface/mapper"
+	"ApiBack/internal/interface/dto/mapper"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -30,7 +30,7 @@ func (c *ApiProjectController) CreateApiProject(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "创建成功"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "保存成功"})
 }
 
 func (c *ApiProjectController) QueryApiProjects(ctx *gin.Context) {

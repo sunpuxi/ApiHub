@@ -16,7 +16,8 @@ type MySQLConfig struct {
 }
 
 type Config struct {
-	MySQL MySQLConfig `yaml:"mysql"`
+	MySQL       MySQLConfig `yaml:"mysql"`
+	DeepSeekKey string      `yaml:"deepseek_key"`
 }
 
 func LoadConfig(path string) (*Config, error) {

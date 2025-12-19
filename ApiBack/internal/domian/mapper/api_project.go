@@ -2,7 +2,7 @@ package mapper
 
 import (
 	"ApiBack/internal/domian/entity"
-	"ApiBack/internal/infrastruction/model"
+	"ApiBack/internal/infrastructure/model"
 )
 
 func ToApiProjectDO(project *entity.ApiProject) *model.ApiProjectDO {

@@ -1,5 +1,6 @@
 // API 类型定义
 export interface CreateProjectRequest {
+  id?: number;
   name: string;
   description?: string;
   editor: string;
@@ -7,6 +8,7 @@ export interface CreateProjectRequest {
 }
 
 export interface CreateApiRequest {
+  id?: number;
   project_id: number;
   path: string;
   method: string;
@@ -17,6 +19,8 @@ export interface CreateApiRequest {
   description?: string;
   editor: string;
   creator: string;
+  mock_data?: string;
+  is_update_resp_schema?: boolean;
 }
 
 export interface Project {
@@ -74,6 +78,7 @@ export interface ApiInfoItem {
   is_del: boolean;
   editor: string;
   creator: string;
+  mock_data: string;
 }
 
 export interface QueryApiResponse {

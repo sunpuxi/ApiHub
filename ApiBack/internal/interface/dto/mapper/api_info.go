@@ -3,7 +3,7 @@ package mapper
 import (
 	"ApiBack/internal/application/query"
 	"ApiBack/internal/interface/dto"
-	"ApiBack/internal/interface/resopnse"
+	"ApiBack/internal/interface/dto/resopnse"
 )
 
 func ToApiInfoQuery(req *dto.ApiInfoQueryReq) *query.ApiInfoQuery {
@@ -16,12 +16,13 @@ func ToApiInfoQuery(req *dto.ApiInfoQueryReq) *query.ApiInfoQuery {
 		pageSize = 10
 	}
 	return &query.ApiInfoQuery{
-		Id:        req.Id,
-		ProjectID: req.ProjectID,
-		Path:      req.Path,
-		Method:    req.Method,
-		Page:      page,
-		PageSize:  pageSize,
+		Id:            req.Id,
+		ProjectID:     req.ProjectID,
+		Path:          req.Path,
+		Method:        req.Method,
+		InterfaceName: req.InterfaceName,
+		Page:          page,
+		PageSize:      pageSize,
 	}
 }
 
@@ -44,6 +45,7 @@ func ToApiInfoResponse(results []*query.ApiInfoQueryResult, total int64) *resopn
 			IsDel:       result.IsDel,
 			Editor:      result.Editor,
 			Creator:     result.Creator,
+			MockData:    result.MockData,
 		})
 	}
 	return &resopnse.ApiInfoResponse{
@@ -51,4 +53,3 @@ func ToApiInfoResponse(results []*query.ApiInfoQueryResult, total int64) *resopn
 		Total: total,
 	}
 }
-
