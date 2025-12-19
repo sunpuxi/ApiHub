@@ -5,4 +5,3 @@ mysql:
   password: 123456
   database: api_hub
   
-deepseek_key: sk-3bd260630fc94c318d676e1e32786857
