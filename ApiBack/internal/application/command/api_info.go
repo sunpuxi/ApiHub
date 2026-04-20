@@ -1,5 +1,10 @@
 package command
 
+type CreateApiInfoResult struct {
+	ID                   int64  `json:"id"`
+	MockGenerationStatus string `json:"mock_generation_status"`
+}
+
 type CreateApiInfoCmd struct {
 	ID                 int64  `json:"id"`
 	ProjectID          int64  `json:"project_id"`

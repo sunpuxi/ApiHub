@@ -79,6 +79,17 @@ export interface ApiInfoItem {
   editor: string;
   creator: string;
   mock_data: string;
+  /** 未返回时前端按 skipped 处理 */
+  mock_generation_status?: string;
+  mock_generation_error?: string;
+  mock_generation_updated_at?: string;
+}
+
+/** POST /apis/createApi 响应 */
+export interface CreateApiResponse {
+  message: string;
+  id: number;
+  mock_generation_status?: string;
 }
 
 export interface QueryApiResponse {

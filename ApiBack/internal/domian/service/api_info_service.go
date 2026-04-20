@@ -6,6 +6,8 @@ import (
 	"ApiBack/internal/domian/repository"
 	"strconv"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type ApiInfoService struct {
@@ -22,6 +24,19 @@ func (s *ApiInfoService) CreateApiInfo(apiInfo *entity.ApiInfo) error {
 	}
 	apiInfoDO := mapper.ToApiInfoDO(apiInfo)
 	err := s.apiInfoRepository.CreateApiInfo(apiInfoDO)
+	if err != nil {
+		return err
+	}
+	apiInfo.Id = apiInfoDO.Id
+	return nil
+}
+
+func (s *ApiInfoService) CreateApiInfoTx(tx *gorm.DB, apiInfo *entity.ApiInfo) error {
+	if apiInfo.Id <= 0 {
+		apiInfo.ApiNameID = "API" + strconv.FormatInt(time.Now().Unix(), 10)
+	}
+	apiInfoDO := mapper.ToApiInfoDO(apiInfo)
+	err := s.apiInfoRepository.CreateApiInfoTx(tx, apiInfoDO)
 	if err != nil {
 		return err
 	}

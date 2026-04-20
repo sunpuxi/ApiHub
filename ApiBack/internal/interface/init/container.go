@@ -6,6 +6,7 @@ import (
 	"ApiBack/internal/domian/service"
 	"ApiBack/internal/infrastructure/client"
 	repoImpl "ApiBack/internal/infrastructure/db"
+	"ApiBack/internal/infrastructure/worker"
 	"ApiBack/internal/interface/api"
 
 	"github.com/meguminnnnnnnnn/go-openai"
@@ -16,6 +17,7 @@ type Container struct {
 	DB                   *gorm.DB
 	ApiProjectController *api.ApiProjectController
 	ApiInfoController    *api.ApiInfoController
+	AsyncWorker          *worker.AsyncTaskWorker
 }
 
 func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
@@ -36,12 +38,16 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 	gptRepo := client.NewGPTClient(openAIClient)
 	gptService := service.NewGPTService(gptRepo)
 
-	apiInfoAppService := appServ.NewApiInfoAppServiceImpl(apiInfoService, gptService)
+	asyncTaskRepo := repoImpl.NewAsyncTaskRepo(db, apiInfoRepoImpl)
+	apiInfoAppService := appServ.NewApiInfoAppServiceImpl(apiInfoService, asyncTaskRepo, db, cfg.AsyncWorker)
 	apiInfoController := api.NewApiInfoController(apiInfoAppService)
+
+	asyncWorker := worker.NewAsyncTaskWorker(asyncTaskRepo, apiInfoRepoImpl, gptService, cfg.AsyncWorker)
 
 	return &Container{
 		DB:                   db,
 		ApiProjectController: apiProjectController,
 		ApiInfoController:    apiInfoController,
+		AsyncWorker:          asyncWorker,
 	}
 }

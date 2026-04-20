@@ -25,15 +25,16 @@ func (c *ApiInfoController) CreateApiInfo(ctx *gin.Context) {
 	}
 
 	cmd := reqDto.ToCreateApiInfoCmd()
-	id, err := c.apiInfoAppService.CreateApiInfo(cmd)
+	result, err := c.apiInfoAppService.CreateApiInfo(cmd)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "保存成功",
-		"id":      id,
+		"message":                "保存成功",
+		"id":                     result.ID,
+		"mock_generation_status": result.MockGenerationStatus,
 	})
 }
 

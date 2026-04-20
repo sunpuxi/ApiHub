@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Form, Input, Button, Space, message, Pagination, Select, Empty } from 'antd';
+import { Card, Table, Form, Input, Button, Space, message, Pagination, Select, Empty, Tag, Tooltip } from 'antd';
 import { SearchOutlined, ReloadOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { apiInfoApi } from '../services/api';
 import type { QueryApiRequest, ApiInfoItem } from '../types/api';
 import { ApiModal } from './ApiModal';
+import {
+  mockGenerationStatusLabel,
+  mockGenerationStatusTagColor,
+} from '../utils/mockGenerationStatus';
 
 const { Option } = Select;
 
@@ -139,6 +143,19 @@ export const QueryApi = () => {
       dataIndex: 'version',
       key: 'version',
       width: 100,
+    },
+    {
+      title: 'Mock 生成',
+      dataIndex: 'mock_generation_status',
+      key: 'mock_generation_status',
+      width: 120,
+      render: (_: string, record: ApiInfoItem) => (
+        <Tooltip title={record.mock_generation_error || undefined}>
+          <Tag color={mockGenerationStatusTagColor(record.mock_generation_status)}>
+            {mockGenerationStatusLabel(record.mock_generation_status)}
+          </Tag>
+        </Tooltip>
+      ),
     },
     {
       title: '接口描述',

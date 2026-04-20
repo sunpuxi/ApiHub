@@ -24,5 +24,8 @@ type ApiInfoItem struct {
 	Editor      string    `json:"editor"`
 	Creator     string    `json:"creator"`
 	MockData    string    `json:"mock_data"`
-}
 
+	MockGenerationStatus    string    `json:"mock_generation_status"`
+	MockGenerationError     string    `json:"mock_generation_error"`
+	MockGenerationUpdatedAt time.Time `json:"mock_generation_updated_at"`
+}

@@ -19,4 +19,8 @@ type ApiInfoDO struct {
 	Editor      string    `gorm:"column:editor;type:varchar(256)" json:"editor"`
 	Creator     string    `gorm:"column:creator;type:varchar(256)" json:"creator"`
 	MockData    string    `gorm:"column:mock_data;type:text" json:"mock_data"`
+
+	MockGenerationStatus    string     `gorm:"column:mock_generation_status;type:varchar(32);not null;default:skipped" json:"mock_generation_status"`
+	MockGenerationError     *string    `gorm:"column:mock_generation_error;type:varchar(512)" json:"mock_generation_error"`
+	MockGenerationUpdatedAt *time.Time `gorm:"column:mock_generation_updated_at" json:"mock_generation_updated_at"`
 }

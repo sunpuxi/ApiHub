@@ -3,6 +3,7 @@ package mapper
 import (
 	"ApiBack/internal/domian/entity"
 	"ApiBack/internal/infrastructure/model"
+	"time"
 )
 
 func ToApiInfoDO(apiInfo *entity.ApiInfo) *model.ApiInfoDO {
@@ -23,6 +24,10 @@ func ToApiInfoDO(apiInfo *entity.ApiInfo) *model.ApiInfoDO {
 		Editor:      apiInfo.Editor,
 		Creator:     apiInfo.Creator,
 		MockData:    apiInfo.MockData,
+
+		MockGenerationStatus:    apiInfo.MockGenerationStatus,
+		MockGenerationError:     strPtrOrNil(apiInfo.MockGenerationError),
+		MockGenerationUpdatedAt: timePtrOrNil(apiInfo.MockGenerationUpdatedAt),
 	}
 }
 
@@ -44,7 +49,39 @@ func ToApiInfoEntity(do *model.ApiInfoDO) *entity.ApiInfo {
 		Editor:      do.Editor,
 		Creator:     do.Creator,
 		MockData:    do.MockData,
+
+		MockGenerationStatus:    do.MockGenerationStatus,
+		MockGenerationError:     derefString(do.MockGenerationError),
+		MockGenerationUpdatedAt: derefTime(do.MockGenerationUpdatedAt),
 	}
+}
+
+func strPtrOrNil(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
+func timePtrOrNil(t time.Time) *time.Time {
+	if t.IsZero() {
+		return nil
+	}
+	return &t
+}
+
+func derefString(p *string) string {
+	if p == nil {
+		return ""
+	}
+	return *p
+}
+
+func derefTime(p *time.Time) time.Time {
+	if p == nil {
+		return time.Time{}
+	}
+	return *p
 }
 
 func ToApiInfoEntityList(dos []*model.ApiInfoDO) []*entity.ApiInfo {

@@ -93,6 +93,9 @@ export const ApiEditForm = ({ editingApi, defaultProjectId, onSave, onCancel }: 
       setLoading(true);
       const response = await apiInfoApi.create(apiData);
       message.success(editingApi ? '接口更新成功' : '接口创建成功');
+      if (response.mock_generation_status === 'pending') {
+        message.info('Mock 数据正在后台生成，请稍后手动刷新列表或重新展开项目后再查看。');
+      }
 
       form.resetFields();
       onSave?.(response.id);

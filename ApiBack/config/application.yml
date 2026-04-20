@@ -2,6 +2,14 @@ mysql:
   host: localhost
   port: 3306
   username: root
-  password: 123456
+  password: 2531qwer
   database: api_hub
-  
+
+deepseek_key: sk-82a9408ad2f04b95b8e0dbde0fd2bf2a
+
+async_worker:
+  interval_seconds: 10
+  lease_minutes: 8
+  max_attempts: 5
+  batch_size: 5
+

@@ -3,6 +3,7 @@ package db
 import (
 	"ApiBack/internal/domian/repository"
 	"ApiBack/internal/infrastructure/model"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -20,10 +21,46 @@ func NewApiInfoRepo(db *gorm.DB) repository.ApiInfoRepository {
 }
 
 func (r *ApiInfoRepo) CreateApiInfo(apiInfo *model.ApiInfoDO) error {
+	return r.CreateApiInfoTx(r.db, apiInfo)
+}
+
+func (r *ApiInfoRepo) CreateApiInfoTx(tx *gorm.DB, apiInfo *model.ApiInfoDO) error {
 	if apiInfo.Id > 0 {
-		return r.db.Table(apiInfoTableName).Where("id = ?", apiInfo.Id).Updates(apiInfo).Error
+		return tx.Table(apiInfoTableName).Where("id = ?", apiInfo.Id).Updates(apiInfo).Error
 	}
-	return r.db.Table(apiInfoTableName).Create(apiInfo).Error
+	return tx.Table(apiInfoTableName).Create(apiInfo).Error
+}
+
+func (r *ApiInfoRepo) GetApiInfoByID(id int64) (*model.ApiInfoDO, error) {
+	var row model.ApiInfoDO
+	err := r.db.Table(apiInfoTableName).Where("id = ? AND is_del = ?", id, 0).First(&row).Error
+	if err != nil {
+		return nil, err
+	}
+	return &row, nil
+}
+
+func (r *ApiInfoRepo) SetMockGenerationRunning(id int64) error {
+	return r.db.Table(apiInfoTableName).Where("id = ? AND is_del = ?", id, 0).Updates(map[string]interface{}{
+		"mock_generation_status":     model.MockGenStatusRunning,
+		"mock_generation_updated_at": time.Now(),
+	}).Error
+}
+
+func (r *ApiInfoRepo) SetMockGenerationOutcome(id int64, mockData *string, status string, errMsg *string) error {
+	updates := map[string]interface{}{
+		"mock_generation_status":     status,
+		"mock_generation_updated_at": time.Now(),
+	}
+	if mockData != nil {
+		updates["mock_data"] = *mockData
+	}
+	if errMsg != nil {
+		updates["mock_generation_error"] = *errMsg
+	} else {
+		updates["mock_generation_error"] = nil
+	}
+	return r.db.Table(apiInfoTableName).Where("id = ? AND is_del = ?", id, 0).Updates(updates).Error
 }
 
 func (r *ApiInfoRepo) QueryApiInfos(filter *repository.ApiInfoFilter) ([]*model.ApiInfoDO, int64, error) {

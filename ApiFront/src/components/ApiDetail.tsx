@@ -1,4 +1,4 @@
-import { Card, Button, Tag, Space, Tabs, Typography, message, Divider } from 'antd';
+import { Card, Button, Tag, Space, Tabs, Typography, message, Divider, Alert, Spin } from 'antd';
 import { 
   EditOutlined, 
   UserOutlined, 
@@ -12,6 +12,11 @@ import {
 } from '@ant-design/icons';
 import type { ApiInfoItem } from '../types/api';
 import { SchemaViewer } from './SchemaViewer';
+import {
+  mockGenerationStatusLabel,
+  mockGenerationStatusTagColor,
+  normalizeMockGenerationStatus,
+} from '../utils/mockGenerationStatus';
 
 const { Title, Text } = Typography;
 
@@ -193,9 +198,46 @@ export const ApiDetail = ({ api, onEdit }: ApiDetailProps) => {
           display: 'flex',
           flexDirection: 'column'
         }}>
+          {(() => {
+            const st = normalizeMockGenerationStatus(api.mock_generation_status);
+            const inProgress = st === 'pending' || st === 'running';
+            return (
+              <Space direction="vertical" style={{ width: '100%', marginBottom: 12 }} size="small">
+                <Space wrap align="center">
+                  <Text type="secondary">生成状态</Text>
+                  <Tag color={mockGenerationStatusTagColor(api.mock_generation_status)}>
+                    {mockGenerationStatusLabel(api.mock_generation_status)}
+                  </Tag>
+                  {api.mock_generation_updated_at ? (
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      更新于 {new Date(api.mock_generation_updated_at).toLocaleString('zh-CN')}
+                    </Text>
+                  ) : null}
+                </Space>
+                {inProgress ? (
+                  <Alert
+                    type="info"
+                    showIcon
+                    message="Mock 正在后台生成"
+                    description="保存后由服务端异步生成，请稍后点击左侧树重新展开项目或刷新列表，再选中本接口查看最新 Mock。"
+                  />
+                ) : null}
+                {st === 'failed' && api.mock_generation_error ? (
+                  <Alert type="error" showIcon message="生成失败" description={api.mock_generation_error} />
+                ) : null}
+              </Space>
+            );
+          })()}
           <Card 
             size="small" 
-            title={<Space><CodeOutlined />JSON Mock 示例</Space>}
+            title={
+              <Space>
+                <CodeOutlined />JSON Mock 示例
+                {normalizeMockGenerationStatus(api.mock_generation_status) === 'running' ? (
+                  <Spin size="small" />
+                ) : null}
+              </Space>
+            }
             extra={
               <Button 
                 type="link" 
@@ -238,6 +280,9 @@ export const ApiDetail = ({ api, onEdit }: ApiDetailProps) => {
                       return api.mock_data;
                     }
                   })()
+                ) : normalizeMockGenerationStatus(api.mock_generation_status) === 'pending' ||
+                  normalizeMockGenerationStatus(api.mock_generation_status) === 'running' ? (
+                  <span style={{ color: '#5c6370', fontStyle: 'italic' }}>// Mock 生成中，请手动刷新后再查看</span>
                 ) : (
                   <span style={{ color: '#5c6370', fontStyle: 'italic' }}>// 暂无 Mock 数据</span>
                 )}

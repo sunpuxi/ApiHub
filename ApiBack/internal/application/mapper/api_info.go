@@ -54,6 +54,10 @@ func ToApiInfoQueryResult(apiInfo *entity.ApiInfo) *query.ApiInfoQueryResult {
 		Editor:      apiInfo.Editor,
 		Creator:     apiInfo.Creator,
 		MockData:    apiInfo.MockData,
+
+		MockGenerationStatus:    apiInfo.MockGenerationStatus,
+		MockGenerationError:     apiInfo.MockGenerationError,
+		MockGenerationUpdatedAt: apiInfo.MockGenerationUpdatedAt,
 	}
 }
 

@@ -1,12 +1,28 @@
 package repository
 
-import "ApiBack/internal/infrastructure/model"
+import (
+	"ApiBack/internal/infrastructure/model"
+
+	"gorm.io/gorm"
+)
 
 type ApiInfoRepository interface {
-	// 创建接口
+	// CreateApiInfo 创建接口
 	CreateApiInfo(apiInfo *model.ApiInfoDO) error
 
-	// 查询接口列表（支持分页和条件查询）
+	// CreateApiInfoTx 在指定事务内创建或更新接口（与 CreateApiInfo 规则一致）
+	CreateApiInfoTx(tx *gorm.DB, apiInfo *model.ApiInfoDO) error
+
+	// GetApiInfoByID 按主键查询未删除记录
+	GetApiInfoByID(id int64) (*model.ApiInfoDO, error)
+
+	// SetMockGenerationRunning 仅更新状态为 running（不修改 mock_data）
+	SetMockGenerationRunning(id int64) error
+
+	// SetMockGenerationOutcome 更新 mock 与生成状态；mockData 为 nil 时不改 mock_data 列；errMsg 为 nil 时将错误列置空。
+	SetMockGenerationOutcome(id int64, mockData *string, status string, errMsg *string) error
+
+	// QueryApiInfos 查询接口列表（支持分页和条件查询）
 	QueryApiInfos(filter *ApiInfoFilter) ([]*model.ApiInfoDO, int64, error)
 }
 

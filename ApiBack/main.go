@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"ApiBack/common"
@@ -17,6 +18,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("加载配置失败: %v", err)
 	}
+	cfg.NormalizeAsyncWorker()
 
 	// 初始化数据库
 	gormDB, err := common.InitDB(cfg)
@@ -26,6 +28,8 @@ func main() {
 
 	// 创建依赖容器
 	container := routerInit.NewContainer(gormDB, cfg)
+
+	go container.AsyncWorker.Run(context.Background())
 
 	// 初始化路由
 	router := gin.Default()

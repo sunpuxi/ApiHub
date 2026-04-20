@@ -6,7 +6,8 @@ import type {
   QueryProjectResponse, 
   QueryApiRequest, 
   QueryApiResponse,
-  ApiInfoItem 
+  ApiInfoItem,
+  CreateApiResponse,
 } from '../types/api';
 
 const API_BASE_URL = 'http://localhost:8080/api/v1';
@@ -30,7 +31,7 @@ export const projectApi = {
 };
 
 export const apiInfoApi = {
-  create: async (data: CreateApiRequest) => {
+  create: async (data: CreateApiRequest): Promise<CreateApiResponse> => {
     const response = await apiClient.post('/apis/createApi', data);
     return response.data;
   },

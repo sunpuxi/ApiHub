@@ -15,9 +15,17 @@ type MySQLConfig struct {
 	Database string `yaml:"database"`
 }
 
+type AsyncWorkerConfig struct {
+	IntervalSeconds int `yaml:"interval_seconds"`
+	LeaseMinutes    int `yaml:"lease_minutes"`
+	MaxAttempts     int `yaml:"max_attempts"`
+	BatchSize       int `yaml:"batch_size"`
+}
+
 type Config struct {
-	MySQL       MySQLConfig `yaml:"mysql"`
-	DeepSeekKey string      `yaml:"deepseek_key"`
+	MySQL       MySQLConfig       `yaml:"mysql"`
+	DeepSeekKey string            `yaml:"deepseek_key"`
+	AsyncWorker AsyncWorkerConfig `yaml:"async_worker"`
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -32,6 +40,22 @@ func LoadConfig(path string) (*Config, error) {
 	}
 
 	return &config, nil
+}
+
+// NormalizeAsyncWorker fills zero values so a partial YAML still works.
+func (c *Config) NormalizeAsyncWorker() {
+	if c.AsyncWorker.IntervalSeconds <= 0 {
+		c.AsyncWorker.IntervalSeconds = 10
+	}
+	if c.AsyncWorker.LeaseMinutes <= 0 {
+		c.AsyncWorker.LeaseMinutes = 8
+	}
+	if c.AsyncWorker.MaxAttempts <= 0 {
+		c.AsyncWorker.MaxAttempts = 5
+	}
+	if c.AsyncWorker.BatchSize <= 0 {
+		c.AsyncWorker.BatchSize = 5
+	}
 }
 
 func (c *MySQLConfig) DSN() string {

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Tree, Input, Button, message, Empty, Spin, Tooltip, Skeleton } from 'antd';
-// ... 保持原有图标导入 ...
-import { ProjectOutlined, ApiOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Tree, Input, Button, message, Empty, Tooltip, Skeleton } from 'antd';
+import { ProjectOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { projectApi, apiInfoApi } from '../services/api';
 import type { ProjectItem, ApiInfoItem, QueryApiRequest } from '../types/api';
 import type { DataNode } from 'antd/es/tree';

@@ -46,6 +46,10 @@ func ToApiInfoResponse(results []*query.ApiInfoQueryResult, total int64) *resopn
 			Editor:      result.Editor,
 			Creator:     result.Creator,
 			MockData:    result.MockData,
+
+			MockGenerationStatus:    result.MockGenerationStatus,
+			MockGenerationError:     result.MockGenerationError,
+			MockGenerationUpdatedAt: result.MockGenerationUpdatedAt,
 		})
 	}
 	return &resopnse.ApiInfoResponse{
