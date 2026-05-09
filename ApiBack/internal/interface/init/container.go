@@ -17,6 +17,7 @@ type Container struct {
 	DB                   *gorm.DB
 	ApiProjectController *api.ApiProjectController
 	ApiInfoController    *api.ApiInfoController
+	MCPController        *api.MCPController
 	AsyncWorker          *worker.AsyncTaskWorker
 }
 
@@ -44,10 +45,15 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 
 	asyncWorker := worker.NewAsyncTaskWorker(asyncTaskRepo, apiInfoRepoImpl, gptService, cfg.AsyncWorker)
 
+	// MCP 相关依赖
+	mcpServer := appServ.NewMCPServer(apiInfoAppService, apiProjectService)
+	mcpController := api.NewMCPController(mcpServer)
+
 	return &Container{
 		DB:                   db,
 		ApiProjectController: apiProjectController,
 		ApiInfoController:    apiInfoController,
+		MCPController:        mcpController,
 		AsyncWorker:          asyncWorker,
 	}
 }

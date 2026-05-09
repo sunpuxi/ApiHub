@@ -5,6 +5,12 @@ import (
 )
 
 func RegisterRoutes(router *gin.Engine, container *Container) {
+	// MCP 协议端点（SSE transport）
+	//   GET  /mcp → 建立 SSE 长连接
+	//   POST /mcp → 投递 JSON-RPC 消息
+	router.Any("/mcp", container.MCPController.HandleMCP)
+
+	// REST API
 	api := router.Group("/api")
 	{
 		v1 := api.Group("/v1")
