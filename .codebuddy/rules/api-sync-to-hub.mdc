@@ -1,0 +1,123 @@
+---
+description: 将 Go 代码中的 API 接口定义同步到 ApiHub 平台。读取 Handler 文件的代码结构，自动生成 JSON Schema，并通过 MCP 工具上传。
+alwaysApply: false
+enabled: true
+updatedAt: 2026-05-09T11:15:00.000Z
+provider: 
+---
+
+# Skill: api-sync-to-hub
+
+将 Go 代码中的 API 接口定义同步到 ApiHub 平台。
+
+## 适用场景
+
+当你编写或修改了一个 Go API Handler 后，希望将其同步到 ApiHub 平台进行管理。
+
+## 输入
+
+至少需要以下文件上下文之一：
+- 当前打开的 Go Handler 文件（如 `xxx_handler.go` 或 `xxx_controller.go`）
+- 对应的 Request/Response DTO 结构体定义文件
+- 路由注册文件（如 `route.go`）
+- 项目名或 project_name_id
+
+## 完整执行流程
+
+```mermaid
+flowchart TD
+    A[读取 Go Handler 代码] --> B[提取路由 Path + Method]
+    A --> C[解析 Request/Response Struct]
+    A --> D[推断项目名称]
+    D --> E[调用 MCP query_project_by_name<br/>获取 project_name_id]
+    C --> F[生成 JSON Schema]
+    B --> G
+    E --> G[调用 MCP upsert_api_info<br/>同步到 ApiHub]
+    F --> G
+    G --> H[返回接口 ID]
+```
+
+## 详细执行步骤
+
+### 步骤 1: 读取源文件并理解接口
+
+读取当前 Handler 文件、DTO 文件和路由注册文件，识别：
+
+1. **Handler 函数名和注释** — 接口标题 `title` 使用英文函数名（如 `CreateApiInfo`、`QueryApiInfos`）；注释用于接口描述 `description`
+2. **结构体定义** — Request DTO 和 Response DTO
+3. **路由注册代码** — 确定 Path 和 HTTP Method
+
+### 步骤 2: 确定项目归属并获取 project_name_id
+
+按以下优先级确定项目名称：
+
+1. 用户明确指定的项目名称
+2. 从文件所在目录结构推断（如 `internal/interface/api/` 中的包名）
+3. 从 route 注册上下文推断（如 route 在 `container.go` 中注册，看该项目属于哪个微服务）
+4. 询问用户输入
+
+**确定项目名称后，必须使用 MCP 工具 `query_project_by_name` 查询项目信息，从中提取 `project_name_id`（project_id 字段的值）。**
+
+MCP 调用方式：
+```
+mcp_call_tool(serverName="apihub", toolName="query_project_by_name", arguments={"name": "项目名称"})
+```
+
+如果项目不存在，先提示用户创建项目。
+
+### 步骤 3: 从 Go struct 生成 JSON Schema
+
+分析 Request/Response 的 Go 结构体，按以下规则生成 JSON Schema：
+
+**类型映射规则：**
+| Go 类型 | JSON Schema |
+|---------|-------------|
+| `string` | `{"type": "string"}` |
+| `int`, `int64`, `int32` | `{"type": "integer"}` |
+| `float64`, `float32` | `{"type": "number"}` |
+| `bool` | `{"type": "boolean"}` |
+| `time.Time` | `{"type": "string", "format": "date-time"}` |
+| `[]T` | `{"type": "array", "items": {T的Schema}}` |
+| 嵌套 struct | `{"type": "object", "properties": {...}}` |
+| `json.RawMessage` / `any` / `interface{}` | `{}` |
+
+**字段规则：**
+- `json:"field_name"` tag → 字段名为 `field_name`
+- `json:"-"` → 忽略该字段
+- `binding:"required"` → 加入 `required` 数组
+- `json:"field_name,omitempty"` → 非必填
+- `form:"field_name"` → 作为请求参数
+
+### 步骤 4: 确定 Path 和 HTTP Method
+
+1. 优先从路由注册文件提取（`router.POST("/path", handler)` / `router.GET("/path", handler)`）
+2. 从 handler 函数命名推断（`CreateXxx` → POST, `GetXxx`/`QueryXxx` → GET, `UpdateXxx` → PUT, `DeleteXxx` → DELETE）
+3. 从包路径 + 文件名推断接口路径
+4. 确认后询问用户
+
+### 步骤 5: 调用 MCP upsert_api_info
+
+使用 `mcp_call_tool` 调用 `upsert_api_info`，`project_name_id` 必须使用步骤 2 获取的值。
+
+参数示例：
+
+```json
+{
+  "project_name_id": "步骤 2 获取的 project_name_id",
+  "path": "/api/xxx",
+  "method": "GET",
+  "title": "Handler 的英文函数名（如 CreateApiInfo、QueryApiInfos）",
+  "version": "1.0",
+  "description": "接口描述（从注释提取，中文）",
+  "req_schema": "步骤 3 生成的请求 JSON Schema 字符串",
+  "resp_schema": "步骤 3 生成的响应 JSON Schema 字符串",
+  "editor": "当前用户",
+  "creator": "当前用户"
+}
+```
+
+## 输出
+
+- 调用成功后，返回创建的接口 ID 和 mock_generation_status
+- 如果查询项目失败，给出具体的错误信息
+- 如果调用失败，给出具体的错误信息和修复建议

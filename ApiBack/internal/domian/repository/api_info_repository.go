@@ -29,6 +29,7 @@ type ApiInfoRepository interface {
 type ApiProjectFilter struct {
 	Id            int64  `json:"id"`
 	ProjectNameID string `json:"project_name_id"`
+	Name          string `json:"name"`
 	Page          int    `json:"page"`
 	PageSize      int    `json:"page_size"`
 }

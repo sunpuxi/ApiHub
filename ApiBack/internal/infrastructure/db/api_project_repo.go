@@ -39,6 +39,9 @@ func (r *ApiProjectRepo) QueryApiProjects(filter *repository.ApiProjectFilter) (
 	if filter.ProjectNameID != "" {
 		query = query.Where("project_name_id = ?", filter.ProjectNameID)
 	}
+	if filter.Name != "" {
+		query = query.Where("name = ?", filter.Name)
+	}
 
 	// 使用 Session 避免修改原始 query 对象
 	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {

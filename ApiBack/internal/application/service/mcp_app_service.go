@@ -8,6 +8,7 @@ import (
 	"ApiBack/internal/application/command"
 	"ApiBack/internal/application/interfaces"
 	"ApiBack/internal/application/query"
+	"ApiBack/internal/domian/entity"
 	"ApiBack/internal/domian/repository"
 	domainService "ApiBack/internal/domian/service"
 
@@ -108,7 +109,57 @@ func NewMCPServer(
 		return nil, out, nil
 	})
 
-	// --- 工具 2: upsert_api_info ---
+// ---------- query_project_by_name ----------
+
+type QueryProjectByNameInput struct {
+	Name string `json:"name" jsonschema:"必填：项目名称（展示名），如 ApiBack"`
+}
+
+// --- 工具 2: query_project_by_name ---
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "query_project_by_name",
+		Description: "根据项目名称（展示名 name）查询项目信息",
+	}, func(ctx context.Context, _ *mcp.CallToolRequest, in QueryProjectByNameInput) (*mcp.CallToolResult, query.ApiProjectQueryResult, error) {
+		name := strings.TrimSpace(in.Name)
+		if name == "" {
+			return nil, query.ApiProjectQueryResult{}, fmt.Errorf("项目名称不能为空")
+		}
+
+		// 1) 尝试按 project_name_id 精确匹配
+		projects, total, err := apiProjectService.QueryApiProjects(&repository.ApiProjectFilter{
+			ProjectNameID: name,
+			Page:          1,
+			PageSize:      10,
+		})
+		if err != nil {
+			return nil, query.ApiProjectQueryResult{}, fmt.Errorf("查询项目失败: %w", err)
+		}
+		if total == 1 && len(projects) > 0 {
+			return nil, toProjectResult(projects[0]), nil
+		}
+		if total > 1 {
+			return nil, query.ApiProjectQueryResult{}, fmt.Errorf("project_name_id 不唯一: %s", name)
+		}
+
+		// 2) 兜底：按展示名 name 精确匹配（服务端精确查询）
+		projects2, total2, err := apiProjectService.QueryApiProjects(&repository.ApiProjectFilter{
+			Name:     name,
+			Page:     1,
+			PageSize: 10,
+		})
+		if err != nil {
+			return nil, query.ApiProjectQueryResult{}, fmt.Errorf("按名称查询项目失败: %w", err)
+		}
+		if total2 == 1 && len(projects2) > 0 {
+			return nil, toProjectResult(projects2[0]), nil
+		}
+		if total2 > 1 {
+			return nil, query.ApiProjectQueryResult{}, fmt.Errorf("项目名称不唯一: %s", name)
+		}
+		return nil, query.ApiProjectQueryResult{}, fmt.Errorf("未找到项目: %s", name)
+	})
+
+	// --- 工具 3: upsert_api_info ---
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "upsert_api_info",
 		Description: "创建/更新接口信息。用于从 IDE/Agent 同步接口信息到 ApiHub 平台。",
@@ -170,6 +221,21 @@ func NewMCPServer(
 	})
 
 	return server
+}
+
+// toProjectResult 将 entity.ApiProject 转为 query.ApiProjectQueryResult
+func toProjectResult(p *entity.ApiProject) query.ApiProjectQueryResult {
+	return query.ApiProjectQueryResult{
+		Id:          p.Id,
+		ProjectID:   p.ProjectID,
+		Name:        p.Name,
+		Description: p.Description,
+		CTime:       p.CTime,
+		MTime:       p.MTime,
+		IsDel:       p.IsDel,
+		Editor:      p.Editor,
+		Creator:     p.Creator,
+	}
 }
 
 // resolveProjectID 根据 project_name_id 查找项目 ID。
