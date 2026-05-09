@@ -5,7 +5,7 @@ mysql:
   password: 2531qwer
   database: api_hub
 
-deepseek_key: sk-82a9408ad2f04b95b8e0dbde0fd2bf2a
+deepseek_key: ""
 
 async_worker:
   interval_seconds: 10
