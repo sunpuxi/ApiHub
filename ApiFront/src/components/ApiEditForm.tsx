@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Form, Input, Select, message, Card, Button, Space } from 'antd';
-import { SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { Form, Input, Select, message, Card, Button, Space, Row, Col, Typography } from 'antd';
+import { SaveOutlined, CloseOutlined, SettingOutlined, CodeOutlined, FileTextOutlined, InboxOutlined } from '@ant-design/icons';
 import { apiInfoApi, projectApi } from '../services/api';
 import type { CreateApiRequest, ApiInfoItem } from '../types/api';
 import { SchemaEditor } from './SchemaEditor';
 
 const { TextArea } = Input;
 const { Option } = Select;
+const { Text } = Typography;
 
 interface ApiEditFormProps {
   editingApi?: ApiInfoItem | null;
@@ -64,13 +65,10 @@ export const ApiEditForm = ({ editingApi, defaultProjectId, onSave, onCancel }: 
     try {
       const values = await form.validateFields();
       
-      // 判断响应参数是否发生变化
       let isUpdateRespSchema = false;
       if (!editingApi) {
-        // 新增模式：只要填写了响应参数就视为更新
         isUpdateRespSchema = !!values.resp_schema && values.resp_schema.trim() !== '';
       } else {
-        // 编辑模式：判断是否与原有 schema 不同
         isUpdateRespSchema = values.resp_schema !== editingApi.resp_schema;
       }
 
@@ -109,72 +107,113 @@ export const ApiEditForm = ({ editingApi, defaultProjectId, onSave, onCancel }: 
     }
   };
 
+  const sectionTitle = (icon: React.ReactNode, text: string) => (
+    <Space size={8}>
+      {icon}
+      <Text strong style={{ fontSize: '15px' }}>{text}</Text>
+    </Space>
+  );
+
   return (
-    <div style={{ height: '100%', overflow: 'auto', background: '#f0f2f5', padding: '24px' }}>
-      <Card
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '20px', fontWeight: 600 }}>
-              {editingApi ? '编辑接口' : '新增接口'}
-            </span>
-            <Space>
-              <Button icon={<CloseOutlined />} onClick={onCancel}>
-                取消
-              </Button>
-              <Button
-                type="primary"
-                icon={<SaveOutlined />}
-                onClick={handleSubmit}
-                loading={loading}
-              >
-                保存
-              </Button>
-            </Space>
-          </div>
+    <div className="api-edit-form" style={{
+      height: '100%', overflow: 'auto', background: '#f0f2f5', padding: '24px 32px',
+      animation: 'fadeInUp 0.35s cubic-bezier(0.23, 1, 0.32, 1)'
+    }}>
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        style={{ borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)' }}
+        .api-edit-form .ant-card { border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .api-edit-form .ant-card-head { padding: 16px 24px; min-height: 0; }
+        .api-edit-form .ant-card-body { padding: 20px 24px; }
+      `}</style>
+
+      {/* ── 页头操作栏 ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px'
+      }}>
+        <Text strong style={{ fontSize: '20px' }}>
+          {editingApi ? '编辑接口' : '新增接口'}
+        </Text>
+        <Space>
+          <Button icon={<CloseOutlined />} onClick={onCancel}>
+            取消
+          </Button>
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            onClick={handleSubmit}
+            loading={loading}
+          >
+            保存
+          </Button>
+        </Space>
+      </div>
+
+      <Form
+        form={form}
+        layout="vertical"
+        autoComplete="off"
+        style={{ maxWidth: '1000px' }}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          autoComplete="off"
+        {/* ── 基本配置 ── */}
+        <Card
+          title={sectionTitle(<SettingOutlined style={{ color: '#667eea' }} />, '基本配置')}
+          style={{ marginBottom: '20px' }}
         >
-          <Form.Item
-            label="所属项目"
-            name="project_id"
-            rules={[{ required: true, message: '请选择项目' }]}
-          >
-            <Select placeholder="请选择项目" disabled={!!editingApi}>
-              {projects.map((project) => (
-                <Option key={project.id} value={project.id}>
-                  {project.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            label="接口路径"
-            name="path"
-            rules={[{ required: true, message: '请输入接口路径' }]}
-          >
-            <Input placeholder="例如：/api/users" />
-          </Form.Item>
-
-          <Form.Item
-            label="请求方法"
-            name="method"
-            rules={[{ required: true, message: '请选择请求方法' }]}
-          >
-            <Select placeholder="请选择请求方法">
-              {httpMethods.map((method) => (
-                <Option key={method} value={method}>
-                  {method}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
+          <Row gutter={24}>
+            <Col span={12}>
+              <Form.Item
+                label="所属项目"
+                name="project_id"
+                rules={[{ required: true, message: '请选择项目' }]}
+              >
+                <Select placeholder="请选择项目" disabled={!!editingApi}>
+                  {projects.map((project) => (
+                    <Option key={project.id} value={project.id}>
+                      {project.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="请求方法"
+                name="method"
+                rules={[{ required: true, message: '请选择请求方法' }]}
+              >
+                <Select placeholder="请选择请求方法">
+                  {httpMethods.map((method) => (
+                    <Option key={method} value={method}>
+                      {method}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={24}>
+            <Col span={12}>
+              <Form.Item
+                label="接口路径"
+                name="path"
+                rules={[{ required: true, message: '请输入接口路径' }]}
+              >
+                <Input placeholder="例如：/api/users" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="接口版本"
+                name="version"
+                rules={[{ required: true, message: '请输入接口版本' }]}
+              >
+                <Input placeholder="例如：v1.0.0" />
+              </Form.Item>
+            </Col>
+          </Row>
           <Form.Item
             label="接口标题"
             name="title"
@@ -182,67 +221,87 @@ export const ApiEditForm = ({ editingApi, defaultProjectId, onSave, onCancel }: 
           >
             <Input placeholder="请输入接口标题" />
           </Form.Item>
+        </Card>
 
+        {/* ── 请求参数 ── */}
+        <Card
+          title={sectionTitle(<CodeOutlined style={{ color: '#667eea' }} />, '请求参数')}
+          style={{ marginBottom: '20px' }}
+        >
           <Form.Item
-            label="接口版本"
-            name="version"
-            rules={[{ required: true, message: '请输入接口版本' }]}
-          >
-            <Input placeholder="例如：v1.0.0" />
-          </Form.Item>
-
-          <Form.Item
-            label="请求参数"
             name="req_schema"
             getValueFromEvent={(value) => value}
+            style={{ marginBottom: 0 }}
           >
             <SchemaEditor form={form} fieldName="req_schema" />
           </Form.Item>
+        </Card>
 
+        {/* ── 响应参数 ── */}
+        <Card
+          title={sectionTitle(<CodeOutlined style={{ color: '#667eea' }} />, '响应参数')}
+          style={{ marginBottom: '20px' }}
+        >
           <Form.Item
-            label="响应参数Schema"
             name="resp_schema"
             getValueFromEvent={(value) => value}
+            style={{ marginBottom: 0 }}
           >
             <SchemaEditor form={form} fieldName="resp_schema" />
           </Form.Item>
+        </Card>
 
-          <Form.Item
-            label="Mock 数据"
-            name="mock_data"
-          >
-            <TextArea 
-              rows={6} 
-              placeholder='请输入 JSON 格式的 Mock 数据'
-              style={{ fontFamily: 'monospace' }}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="接口描述"
-            name="description"
-          >
-            <TextArea rows={3} placeholder="请输入接口描述（可选）" />
-          </Form.Item>
-
-          <Form.Item
-            label="编辑者"
-            name="editor"
-            rules={[{ required: true, message: '请输入编辑者' }]}
-          >
-            <Input placeholder="请输入编辑者" />
-          </Form.Item>
-
-          <Form.Item
-            label="创建者"
-            name="creator"
-            rules={[{ required: true, message: '请输入创建者' }]}
-          >
-            <Input placeholder="请输入创建者" />
-          </Form.Item>
-        </Form>
-      </Card>
+        {/* ── 其他信息 ── */}
+        <Card
+          title={sectionTitle(<InboxOutlined style={{ color: '#667eea' }} />, '其他信息')}
+          style={{ marginBottom: '20px' }}
+        >
+          <Row gutter={24}>
+            <Col span={12}>
+              <Form.Item
+                label="Mock 数据"
+                name="mock_data"
+              >
+                <TextArea
+                  rows={6}
+                  placeholder='请输入 JSON 格式的 Mock 数据'
+                  style={{ fontFamily: 'monospace' }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="接口描述"
+                name="description"
+              >
+                <TextArea rows={6} placeholder="请输入接口描述（可选）" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={24}>
+            <Col span={12}>
+              <Form.Item
+                label="编辑者"
+                name="editor"
+                rules={[{ required: true, message: '请输入编辑者' }]}
+              >
+                <Input placeholder="请输入编辑者" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="创建者"
+                name="creator"
+                rules={[{ required: true, message: '请输入创建者' }]}
+              >
+                <Input placeholder="请输入创建者" />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Card>
+      </Form>
     </div>
   );
 };
+
 

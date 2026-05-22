@@ -1,10 +1,12 @@
-import { useState } from 'react';
-import { Layout, Typography, Space, Button, Tooltip, Divider } from 'antd';
+import { useState, useEffect } from 'react';
+import { ConfigProvider, Layout, Typography, Space, Button, Tooltip, Divider, theme } from 'antd';
 import { 
   GithubOutlined, 
-  BookOutlined, 
-  QuestionCircleOutlined,
-  ThunderboltFilled 
+  ThunderboltFilled,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  SunOutlined,
+  MoonOutlined,
 } from '@ant-design/icons';
 import { ProjectNavigation } from './components/ProjectNavigation';
 import { ProjectDetail } from './components/ProjectDetail';
@@ -29,6 +31,13 @@ function App() {
   const [showApiEdit, setShowApiEdit] = useState(false);
   const [editingApiForDetail, setEditingApiForDetail] = useState<ApiInfoItem | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [siderCollapsed, setSiderCollapsed] = useState(false);
+  const [isDark, setIsDark] = useState(() => localStorage.getItem('apihub-theme') === 'dark');
+
+  useEffect(() => {
+    localStorage.setItem('apihub-theme', isDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
 
   const handleSelectProject = (project: ProjectItem | null) => {
     setSelectedProject(project);
@@ -84,6 +93,11 @@ function App() {
   };
 
   return (
+    <ConfigProvider
+      theme={{
+        algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+      }}
+    >
     <Layout style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header style={{ 
         background: 'rgba(20, 20, 20, 0.95)', // 半透明
@@ -114,8 +128,22 @@ function App() {
           zIndex: 1,
           display: 'flex',
           alignItems: 'center',
-          gap: '16px'
+          gap: '12px'
         }}>
+          {/* 侧边栏折叠按钮 */}
+          <Tooltip title={siderCollapsed ? '展开侧边栏' : '折叠侧边栏'}>
+            <Button
+              type="text"
+              size="small"
+              icon={siderCollapsed
+                ? <MenuUnfoldOutlined style={{ color: 'rgba(255,255,255,0.65)', fontSize: '16px' }} />
+                : <MenuFoldOutlined style={{ color: 'rgba(255,255,255,0.65)', fontSize: '16px' }} />
+              }
+              onClick={() => setSiderCollapsed(!siderCollapsed)}
+              style={{ padding: '0 4px', height: 32, width: 32 }}
+            />
+          </Tooltip>
+
           {/* Logo 区域 */}
           <div style={{ 
             display: 'flex', 
@@ -156,18 +184,22 @@ function App() {
         </div>
 
         {/* 右侧工具栏 */}
-        <div style={{ zIndex: 1, display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Space size={4}>
-            <Tooltip title="使用帮助">
-              <Button type="text" size="small" icon={<BookOutlined style={{ color: 'rgba(255, 255, 255, 0.45)' }} />} />
-            </Tooltip>
-            <Tooltip title="反馈问题">
-              <Button type="text" size="small" icon={<QuestionCircleOutlined style={{ color: 'rgba(255, 255, 255, 0.45)' }} />} />
-            </Tooltip>
-            <Tooltip title="Github">
-              <Button type="text" size="small" icon={<GithubOutlined style={{ color: 'rgba(255, 255, 255, 0.45)' }} />} />
-            </Tooltip>
-          </Space>
+        <div style={{ zIndex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Tooltip title={isDark ? '切换到亮色模式' : '切换到暗色模式'}>
+            <Button
+              type="text"
+              size="small"
+              icon={isDark
+                ? <SunOutlined style={{ color: 'rgba(255,255,255,0.65)', fontSize: '16px' }} />
+                : <MoonOutlined style={{ color: 'rgba(255,255,255,0.45)', fontSize: '16px' }} />
+              }
+              onClick={() => setIsDark(!isDark)}
+              style={{ width: 32, height: 32 }}
+            />
+          </Tooltip>
+          <Tooltip title="Github">
+            <Button type="text" size="small" icon={<GithubOutlined style={{ color: 'rgba(255, 255, 255, 0.45)' }} />} />
+          </Tooltip>
           
           <div style={{ 
             background: 'rgba(82, 196, 26, 0.1)', 
@@ -211,12 +243,17 @@ function App() {
         }} />
         
         <Sider 
-          width={320} 
+          width={320}
+          collapsedWidth={48}
+          collapsible
+          collapsed={siderCollapsed}
+          onCollapse={setSiderCollapsed}
+          trigger={null}
           style={{ 
-            background: '#fff',
             overflow: 'hidden',
             flexShrink: 0,
-            borderRight: '1px solid #f0f0f0'
+            borderRight: isDark ? '1px solid #303030' : '1px solid #f0f0f0',
+            transition: 'all 0.2s ease'
           }}
         >
           <ProjectNavigation
@@ -230,9 +267,12 @@ function App() {
             selectedProjectId={selectedProject?.project_id}
             selectedApiId={selectedApi?.id}
             refreshTrigger={refreshTrigger}
+            collapsed={siderCollapsed}
+            onToggleCollapse={() => setSiderCollapsed(!siderCollapsed)}
           />
         </Sider>
-        <Content style={{ overflow: 'hidden', background: '#f0f2f5' }}>
+        <Content style={{ overflow: 'hidden' }}>
+          <div key={showApiEdit ? 'edit' : selectedApi ? 'api' : 'project'} className="view-transition">
           {showApiEdit ? (
             <ApiEditForm
               editingApi={editingApiForDetail}
@@ -260,29 +300,32 @@ function App() {
           ) : (
             <ProjectDetail project={selectedProject} onEdit={handleProjectEdit} />
           )}
+          </div>
         </Content>
       </Layout>
 
-      <ProjectModal
-        open={projectModalOpen}
-        onCancel={() => {
-          setProjectModalOpen(false);
-          setEditingProject(null);
-        }}
-        onSuccess={handleProjectModalSuccess}
-        editingProject={editingProject}
-      />
+      </Layout>
+    </ConfigProvider>
 
-      <ApiModal
-        open={apiModalOpen}
-        onCancel={() => {
-          setApiModalOpen(false);
-          setEditingApi(null);
-        }}
-        onSuccess={handleApiModalSuccess}
-        editingApi={editingApi}
-      />
-    </Layout>
+    <ProjectModal
+      open={projectModalOpen}
+      onCancel={() => {
+        setProjectModalOpen(false);
+        setEditingProject(null);
+      }}
+      onSuccess={handleProjectModalSuccess}
+      editingProject={editingProject}
+    />
+
+    <ApiModal
+      open={apiModalOpen}
+      onCancel={() => {
+        setApiModalOpen(false);
+        setEditingApi(null);
+      }}
+      onSuccess={handleApiModalSuccess}
+      editingApi={editingApi}
+    />
   );
 }
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Button, Input, Select, Space, Card, Modal, message } from 'antd';
-import { PlusOutlined, DeleteOutlined, CodeOutlined } from '@ant-design/icons';
+import { Button, Input, Select, Space, Card, Modal, message, Tooltip } from 'antd';
+import { PlusOutlined, DeleteOutlined, CodeOutlined, EyeOutlined } from '@ant-design/icons';
 import type { FormInstance } from 'antd';
 import React from 'react';
 
@@ -48,6 +48,7 @@ export interface Parameter {
   example: string;
   required?: boolean;
   children?: Parameter[];
+  description?: string;
 }
 
 interface SchemaEditorProps {
@@ -62,6 +63,7 @@ const PARAM_TYPES = ['string', 'number', 'integer', 'boolean', 'object', 'array'
 export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorProps) => {
   const [parameters, setParameters] = useState<Parameter[]>([]);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [rawJsonModalOpen, setRawJsonModalOpen] = useState(false);
   const [jsonInput, setJsonInput] = useState('');
   const updateTimerRef = useRef<number | null>(null);
   const isInternalUpdateRef = useRef(false);
@@ -124,6 +126,7 @@ export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorP
         type: prop.type || 'string',
         example: prop.example || '',
         required: required.includes(key),
+        description: prop.description || '',
       };
 
       if (prop.type === 'object' && prop.properties) {
@@ -158,6 +161,9 @@ export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorP
 
       if (param.example) {
         prop.example = param.example;
+      }
+      if (param.description) {
+        prop.description = param.description;
       }
 
       if (param.type === 'object' && param.children && param.children.length > 0) {
@@ -320,27 +326,30 @@ export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorP
   const ParameterItem = React.memo(({ param, level, onChange, onAddChild, onDelete }: ParameterItemProps) => {
     const [localName, setLocalName] = useState(() => param.name);
     const [localExample, setLocalExample] = useState(() => param.example);
+    const [localDescription, setLocalDescription] = useState(() => param.description || '');
     const lastParamIdRef = useRef(param.id);
 
-    // 只在 param.id 变化时更新（新参数项或参数被替换）
-    // 完全移除对 param.name 和 param.example 的监听，避免编辑时被覆盖
+    // 只在 param.id 变化时更新
     useEffect(() => {
       if (lastParamIdRef.current !== param.id) {
         lastParamIdRef.current = param.id;
         setLocalName(param.name);
         setLocalExample(param.example);
+        setLocalDescription(param.description || '');
       }
     }, [param.id]);
 
     // 输入时只更新本地状态，不触发任何父组件更新
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      setLocalName(value);
+      setLocalName(e.target.value);
     };
 
     const handleExampleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      setLocalExample(value);
+      setLocalExample(e.target.value);
+    };
+
+    const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setLocalDescription(e.target.value);
     };
 
     // 失去焦点时才同步到父组件
@@ -353,6 +362,12 @@ export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorP
     const handleExampleBlur = () => {
       if (localExample !== param.example) {
         onChange(param.id, 'example', localExample);
+      }
+    };
+
+    const handleDescriptionBlur = () => {
+      if (localDescription !== (param.description || '')) {
+        onChange(param.id, 'description', localDescription);
       }
     };
 
@@ -373,7 +388,7 @@ export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorP
                 value={localName}
                 onChange={handleNameChange}
                 onBlur={handleNameBlur}
-                style={{ width: 150 }}
+                style={{ width: 140 }}
               />
               <Select
                 value={param.type}
@@ -383,7 +398,7 @@ export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorP
                     onChange(param.id, 'children', undefined);
                   }
                 }}
-                style={{ width: 120 }}
+                style={{ width: 110 }}
               >
                 {PARAM_TYPES.map((type) => (
                   <Option key={type} value={type}>
@@ -392,16 +407,16 @@ export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorP
                 ))}
               </Select>
               <Input
-                placeholder="参数示例"
+                placeholder="示例值"
                 value={localExample}
                 onChange={handleExampleChange}
                 onBlur={handleExampleBlur}
-                style={{ width: 200 }}
+                style={{ width: 160 }}
               />
               <Select
                 value={param.required ? 'required' : 'optional'}
                 onChange={(val) => onChange(param.id, 'required', val === 'required')}
-                style={{ width: 100 }}
+                style={{ width: 90 }}
               >
                 <Option value="required">
                   <span style={{ color: '#ff4d4f' }}>必填</span>
@@ -416,7 +431,6 @@ export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorP
                   icon={<PlusOutlined />}
                   size="small"
                   onClick={() => onAddChild(param.id)}
-                  style={{ color: '#1890ff' }}
                 >
                   添加子参数
                 </Button>
@@ -431,6 +445,13 @@ export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorP
                 删除
               </Button>
             </Space>
+            <Input
+              placeholder="参数描述（可选）"
+              value={localDescription}
+              onChange={handleDescriptionChange}
+              onBlur={handleDescriptionBlur}
+              style={{ width: '100%', fontSize: '12px' }}
+            />
             {hasChildren && (
               <div style={{ marginTop: 8, paddingLeft: 16, borderLeft: '2px solid #d9d9d9' }}>
                 {param.children!.map((child) => (
@@ -471,35 +492,43 @@ export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorP
             flex: 1,
             borderRadius: '6px',
             height: '40px',
-            borderColor: '#1890ff',
-            color: '#1890ff'
           }}
         >
           添加参数
         </Button>
-        <Button
-          icon={<CodeOutlined />}
-          onClick={() => setImportModalOpen(true)}
-          style={{ 
-            height: '40px',
-            borderRadius: '6px'
-          }}
-        >
-          JSON 导入
-        </Button>
+        <Tooltip title="从 JSON 示例推导参数结构">
+          <Button
+            icon={<CodeOutlined />}
+            onClick={() => setImportModalOpen(true)}
+            style={{ height: '40px', borderRadius: '6px' }}
+          >
+            JSON 导入
+          </Button>
+        </Tooltip>
+        <Tooltip title="查看原始 JSON Schema">
+          <Button
+            icon={<EyeOutlined />}
+            onClick={() => setRawJsonModalOpen(true)}
+            style={{ height: '40px', borderRadius: '6px' }}
+            disabled={!value}
+          >
+            查看 JSON
+          </Button>
+        </Tooltip>
       </div>
       <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
         {parameters.length === 0 ? (
           <div style={{ 
             textAlign: 'center', 
-            padding: '60px 20px', 
+            padding: '48px 20px', 
             color: '#999',
             background: '#fafafa',
             borderRadius: '8px',
             border: '2px dashed #d9d9d9'
           }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
-            <div style={{ fontSize: '14px' }}>暂无参数，点击上方按钮添加</div>
+            <CodeOutlined style={{ fontSize: '36px', color: '#d9d9d9', marginBottom: '12px' }} />
+            <div style={{ fontSize: '14px', marginBottom: '8px' }}>暂无参数定义</div>
+            <div style={{ fontSize: '12px', color: '#bbb' }}>点击上方「添加参数」手动创建，或通过「JSON 导入」自动推导</div>
           </div>
         ) : (
           parameters.map((param) => (
@@ -537,6 +566,39 @@ export const SchemaEditor = ({ value, onChange, form, fieldName }: SchemaEditorP
             style={{ fontFamily: 'monospace', fontSize: '12px' }}
           />
         </div>
+      </Modal>
+
+      {/* ── 查看原始 JSON Schema ── */}
+      <Modal
+        title="当前 JSON Schema"
+        open={rawJsonModalOpen}
+        onCancel={() => setRawJsonModalOpen(false)}
+        footer={
+          <Button onClick={() => setRawJsonModalOpen(false)}>关闭</Button>
+        }
+        width={700}
+        destroyOnClose
+      >
+        <pre style={{
+          background: '#282c34',
+          color: '#abb2bf',
+          padding: '20px',
+          borderRadius: '8px',
+          fontFamily: '"Cascadia Code", Consolas, monospace',
+          fontSize: '12px',
+          lineHeight: 1.6,
+          overflow: 'auto',
+          maxHeight: '400px',
+          margin: 0,
+        }}>
+          {(() => {
+            try {
+              return JSON.stringify(JSON.parse(value || '{}'), null, 2);
+            } catch {
+              return value || '{}';
+            }
+          })()}
+        </pre>
       </Modal>
     </div>
   );

@@ -12,11 +12,13 @@ import {
 } from '@ant-design/icons';
 import type { ApiInfoItem } from '../types/api';
 import { SchemaViewer } from './SchemaViewer';
+import { EmptyState } from './EmptyState';
 import {
   mockGenerationStatusLabel,
   mockGenerationStatusTagColor,
   normalizeMockGenerationStatus,
 } from '../utils/mockGenerationStatus';
+import { getMethodStyle } from '../utils/httpMethod';
 
 const { Title, Text } = Typography;
 
@@ -25,34 +27,13 @@ interface ApiDetailProps {
   onEdit?: (api: ApiInfoItem) => void;
 }
 
-const getMethodStyle = (method: string) => {
-  const methodLower = method.toLowerCase();
-  const colors: Record<string, { bg: string; text: string; border: string }> = {
-    get: { bg: 'rgba(82, 196, 26, 0.1)', text: '#52c41a', border: '#b7eb8f' },
-    post: { bg: 'rgba(24, 144, 255, 0.1)', text: '#1890ff', border: '#91d5ff' },
-    put: { bg: 'rgba(250, 173, 20, 0.1)', text: '#faad14', border: '#ffd591' },
-    delete: { bg: 'rgba(255, 77, 79, 0.1)', text: '#ff4d4f', border: '#ffa39e' },
-    patch: { bg: 'rgba(114, 46, 209, 0.1)', text: '#722ed1', border: '#d3adf7' },
-  };
-  return colors[methodLower] || { bg: '#f5f5f5', text: '#595959', border: '#d9d9d9' };
-};
-
 export const ApiDetail = ({ api, onEdit }: ApiDetailProps) => {
   if (!api) {
     return (
-      <div style={{ 
-        height: '100%', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#fff',
-        color: '#999'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '64px', marginBottom: '16px', opacity: 0.5 }}>🔌</div>
-          <Title level={4} style={{ color: '#bfbfbf' }}>请从左侧选择一个接口查看详情</Title>
-        </div>
-      </div>
+      <EmptyState
+        icon={<ApiOutlined style={{ fontSize: 56 }} />}
+        title="请从左侧选择一个接口查看详情"
+      />
     );
   }
 

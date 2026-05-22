@@ -7,15 +7,24 @@
   height: 100%;
 }
 
+/* ── 视图切换过渡动画 ── */
+@keyframes viewFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.view-transition {
+  height: 100%;
+  animation: viewFadeIn 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
 /* 表格样式优化 */
 .custom-table .ant-table-tbody > tr:hover > td {
   background-color: #f5f7fa !important;
 }
-
 .custom-table .ant-table-tbody > tr:nth-child(even) {
   background-color: #fafbfc;
 }
-
 .custom-table .ant-table-tbody > tr:nth-child(even):hover > td {
   background-color: #f0f2f5 !important;
 }
@@ -25,13 +34,11 @@
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
-
 .ant-card-head {
   border-radius: 8px 8px 0 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-bottom: none;
 }
-
 .ant-card-head-title {
   color: #fff;
   font-weight: 600;
@@ -57,41 +64,13 @@
   min-width: 50px;
   text-align: center;
 }
-
-.method-get {
-  background-color: #52c41a;
-  color: #fff;
-}
-
-.method-post {
-  background-color: #1890ff;
-  color: #fff;
-}
-
-.method-put {
-  background-color: #faad14;
-  color: #fff;
-}
-
-.method-delete {
-  background-color: #ff4d4f;
-  color: #fff;
-}
-
-.method-patch {
-  background-color: #722ed1;
-  color: #fff;
-}
-
-.method-head {
-  background-color: #13c2c2;
-  color: #fff;
-}
-
-.method-options {
-  background-color: #eb2f96;
-  color: #fff;
-}
+.method-get    { background-color: #52c41a; color: #fff; }
+.method-post   { background-color: #1890ff; color: #fff; }
+.method-put    { background-color: #faad14; color: #fff; }
+.method-delete { background-color: #ff4d4f; color: #fff; }
+.method-patch  { background-color: #722ed1; color: #fff; }
+.method-head   { background-color: #13c2c2; color: #fff; }
+.method-options{ background-color: #eb2f96; color: #fff; }
 
 /* 参数编辑器样式优化 */
 .schema-editor-card {
@@ -101,12 +80,10 @@
   margin-bottom: 8px;
   transition: all 0.3s;
 }
-
 .schema-editor-card:hover {
   border-color: #1890ff;
   box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
 }
-
 .schema-editor-card-nested {
   background: #fafafa;
   border-left: 3px solid #1890ff;
@@ -116,7 +93,6 @@
 .action-button {
   transition: all 0.3s;
 }
-
 .action-button:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -128,32 +104,16 @@
   will-change: filter;
   transition: filter 300ms;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
+.logo:hover { filter: drop-shadow(0 0 2em #646cffaa); }
+.logo.react:hover { filter: drop-shadow(0 0 2em #61dafbaa); }
 
 @keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
-
 @media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+  a:nth-of-type(2) .logo { animation: logo-spin infinite 20s linear; }
 }
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
+.card { padding: 2em; }
+.read-the-docs { color: #888; }

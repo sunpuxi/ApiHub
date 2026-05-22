@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Tree, Input, Button, message, Empty, Tooltip, Skeleton } from 'antd';
-import { ProjectOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import {
+  ProjectOutlined, PlusOutlined, ReloadOutlined,
+  MenuFoldOutlined, MenuUnfoldOutlined
+} from '@ant-design/icons';
 import { projectApi, apiInfoApi } from '../services/api';
 import type { ProjectItem, ApiInfoItem, QueryApiRequest } from '../types/api';
 import type { DataNode } from 'antd/es/tree';
+import { getMethodStyle } from '../utils/httpMethod';
 
 interface ProjectNavigationProps {
   onSelectProject?: (project: ProjectItem | null) => void;
@@ -13,6 +17,8 @@ interface ProjectNavigationProps {
   selectedProjectId?: string;
   selectedApiId?: number;
   refreshTrigger?: number;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 interface ProjectNode extends DataNode {
@@ -21,18 +27,6 @@ interface ProjectNode extends DataNode {
   isProject: boolean;
 }
 
-const getMethodStyle = (method: string) => {
-  const methodLower = method.toLowerCase();
-  const colors: Record<string, { bg: string; text: string }> = {
-    get: { bg: 'rgba(82, 196, 26, 0.1)', text: '#52c41a' },
-    post: { bg: 'rgba(24, 144, 255, 0.1)', text: '#1890ff' },
-    put: { bg: 'rgba(250, 173, 20, 0.1)', text: '#faad14' },
-    delete: { bg: 'rgba(255, 77, 79, 0.1)', text: '#ff4d4f' },
-    patch: { bg: 'rgba(114, 46, 209, 0.1)', text: '#722ed1' },
-  };
-  return colors[methodLower] || { bg: '#f5f5f5', text: '#595959' };
-};
-
 export const ProjectNavigation = ({ 
   onSelectProject, 
   onSelectApi, 
@@ -40,11 +34,13 @@ export const ProjectNavigation = ({
   onCreateProject,
   selectedProjectId,
   selectedApiId,
-  refreshTrigger
+  refreshTrigger,
+  collapsed = false,
+  onToggleCollapse
 }: ProjectNavigationProps) => {
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<ProjectItem[]>([]);
-  const [apiMap, setApiMap] = useState<Map<string, ApiInfoItem[]>>(new Map()); // key: project.id (as string)
+  const [apiMap, setApiMap] = useState<Map<string, ApiInfoItem[]>>(new Map());
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
   const [searchValue, setSearchValue] = useState('');
 
@@ -298,8 +294,6 @@ export const ProjectNavigation = ({
       height: '100%', 
       display: 'flex', 
       flexDirection: 'column',
-      background: '#fff',
-      borderRight: '1px solid #f0f0f0'
     }}>
       <style>{`
         .project-navigation-container .ant-tree-node-content-wrapper {
@@ -310,12 +304,10 @@ export const ProjectNavigation = ({
         }
         .project-navigation-container .ant-tree-node-content-wrapper:hover {
           background-color: #f5f7ff !important;
-          color: #1890ff !important;
         }
         .project-navigation-container .ant-tree-node-selected {
           background-color: #e6f7ff !important;
-          color: #1890ff !important;
-          box-shadow: inset 2px 0 0 #1890ff;
+          box-shadow: inset 2px 0 0 #667eea;
         }
         .ant-tree-switcher {
           display: flex !important;
@@ -323,55 +315,117 @@ export const ProjectNavigation = ({
           justify-content: center !important;
         }
       `}</style>
-      <div style={{ padding: '16px', borderBottom: '1px solid #f0f0f0' }}>
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-          <Input
-            placeholder="搜索项目或接口"
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            allowClear
-            style={{ flex: 1 }}
-          />
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={loadProjects}
-            loading={loading}
-          />
+
+      {collapsed ? (
+        /* ── 折叠态：只显示展开按钮 ── */
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: '12px 0',
+          gap: '16px',
+        }}>
+          <Tooltip title="展开侧边栏" placement="right">
+            <Button
+              type="text"
+              icon={<MenuUnfoldOutlined style={{ fontSize: '18px', color: '#667eea' }} />}
+              onClick={onToggleCollapse}
+              style={{ width: 32, height: 32 }}
+            />
+          </Tooltip>
+          {projects.length > 0 && (
+            <Tooltip title={`${projects.length} 个项目`} placement="right">
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%',
+                background: 'rgba(102, 126, 234, 0.1)',
+                color: '#667eea',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '11px', fontWeight: 700,
+              }}>
+                {projects.length}
+              </div>
+            </Tooltip>
+          )}
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={onCreateProject}
-          block
-          style={{ marginTop: '8px' }}
-        >
-          创建项目
-        </Button>
-      </div>
-      <div style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
-        {loading && projects.length === 0 ? (
-          <div style={{ padding: '16px' }}>
-            <Skeleton active paragraph={{ rows: 8 }} />
+      ) : (
+        /* ── 展开态：完整导航 ── */
+        <>
+          <div style={{ padding: '16px', borderBottom: '1px solid #f0f0f0' }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              <Input
+                placeholder="搜索项目或接口"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                allowClear
+                style={{ flex: 1 }}
+              />
+              <Tooltip title="折叠侧边栏">
+                <Button
+                  icon={<MenuFoldOutlined />}
+                  onClick={onToggleCollapse}
+                />
+              </Tooltip>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={loadProjects}
+                loading={loading}
+              />
+            </div>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={onCreateProject}
+              block
+              style={{ marginTop: '8px' }}
+            >
+              创建项目
+            </Button>
           </div>
-        ) : treeData.length === 0 ? (
-          <Empty 
-            description="暂无项目" 
-            style={{ padding: '40px 0' }}
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          />
-        ) : (
-          <Tree
-            key={treeDataKey}
-            treeData={treeData}
-            selectedKeys={getSelectedKeys()}
-            expandedKeys={expandedKeys}
-            onSelect={handleSelect}
-            onExpand={handleExpand}
-            blockNode
-            showLine={{ showLeafIcon: false }}
-          />
-        )}
-      </div>
+          <div style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
+            {loading && projects.length === 0 ? (
+              <div style={{ padding: '12px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                  <Skeleton.Input active size="small" style={{ width: 200, height: 32 }} />
+                  <Skeleton.Button active size="small" style={{ width: 32, height: 32 }} />
+                </div>
+                <Skeleton.Button active size="small" style={{ width: '100%', height: 36, marginBottom: 8 }} />
+                {/* 模拟树节点 */}
+                {[1, 2, 3].map((i) => (
+                  <div key={i} style={{ marginTop: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 4px' }}>
+                      <Skeleton.Avatar active size="small" shape="square" style={{ width: 16, height: 16 }} />
+                      <Skeleton.Input active size="small" style={{ width: `${80 + i * 20}px`, height: 16 }} />
+                    </div>
+                    {i < 3 && [1, 2].map((j) => (
+                      <div key={j} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 4px 6px 28px' }}>
+                        <Skeleton.Input active size="small" style={{ width: 28, height: 12 }} />
+                        <Skeleton.Input active size="small" style={{ width: `${60 + j * 30}px`, height: 14 }} />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            ) : treeData.length === 0 ? (
+              <Empty 
+                description="暂无项目" 
+                style={{ padding: '40px 0' }}
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+              />
+            ) : (
+              <Tree
+                key={treeDataKey}
+                treeData={treeData}
+                selectedKeys={getSelectedKeys()}
+                expandedKeys={expandedKeys}
+                onSelect={handleSelect}
+                onExpand={handleExpand}
+                blockNode
+                showLine={{ showLeafIcon: false }}
+              />
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };

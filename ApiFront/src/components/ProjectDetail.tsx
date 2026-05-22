@@ -1,6 +1,7 @@
 import { Card, Descriptions, Button, Tag, Space, Typography, Divider } from 'antd';
-import { EditOutlined, CalendarOutlined, UserOutlined, ProjectOutlined } from '@ant-design/icons';
+import { EditOutlined, CalendarOutlined, UserOutlined, ProjectOutlined, FolderOpenOutlined } from '@ant-design/icons';
 import type { ProjectItem } from '../types/api';
+import { EmptyState } from './EmptyState';
 
 const { Title, Text } = Typography;
 
@@ -12,19 +13,10 @@ interface ProjectDetailProps {
 export const ProjectDetail = ({ project, onEdit }: ProjectDetailProps) => {
   if (!project) {
     return (
-      <div style={{ 
-        height: '100%', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#fff',
-        color: '#999'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '64px', marginBottom: '16px', opacity: 0.5 }}>📋</div>
-          <Title level={4} style={{ color: '#bfbfbf' }}>请从左侧选择一个项目查看详情</Title>
-        </div>
-      </div>
+      <EmptyState
+        icon={<FolderOpenOutlined style={{ fontSize: 56 }} />}
+        title="请从左侧选择一个项目查看详情"
+      />
     );
   }
 
